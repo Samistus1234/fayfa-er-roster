@@ -13,11 +13,43 @@ A comprehensive Emergency Room roster management application for Fayfa General H
 - **Export Functionality** - Export data to CSV and PDF formats
 - **Referral Duties Tracking** - Special tracking for referral duties (R, R2, ER)
 
-## 🏥 Live Demo
+## 🔗 Quick Start
 
-The application is deployed and accessible at: **[Will be provided after deployment]**
+### Option 1: Download and Run
+1. **Download:** [Click here to download ZIP](../../archive/refs/heads/main.zip)
+2. **Extract** and open terminal in the folder
+3. **Install:** `npm install`
+4. **Start:** `npm start`
+5. **Access:** http://localhost:3000
 
-## Technology Stack
+### Option 2: Clone Repository
+```bash
+git clone https://github.com/YOUR_USERNAME/fayfa-er-roster.git
+cd fayfa-er-roster
+npm install
+npm start
+```
+
+## 📱 Application Overview
+
+### Main Dashboard
+- **Doctor Analytics:** View duty counts and percentages for each doctor
+- **Monthly Roster:** Complete schedule view with shift types and referral duties
+- **Quick Actions:** Add doctors, create roster entries, view notifications
+
+### Advanced Features
+- **Workload Analysis:** Detailed analysis with intensity scoring and balance metrics
+- **Fairness Metrics:** Equity analysis with recommendations and alerts
+- **Consultation Log:** Professional specialist consultation tracking form
+- **Export Options:** CSV and PDF export for all data sections
+
+### Sample Data Included
+- **7 Pre-loaded Doctors:** Dr. Ahmed, Dr. Hagah, Dr. Shafi, Dr. Hasan, Dr. Akin, Dr. Ebuka, Dr. Rabab
+- **June 2025 Roster:** Complete month with 148 roster entries
+- **Referral Duties:** R, R2, ER duty codes properly tracked
+- **Analytics Ready:** Immediate access to workload and fairness analysis
+
+## 🛠️ Technology Stack
 
 - **Backend**: Node.js, Express.js
 - **Email Service**: Nodemailer
