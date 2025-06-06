@@ -81,7 +81,7 @@ class Roster {
         referral: doctorDuties.filter(d => d.isReferralDuty).length
       };
 
-      const totalDuties = shiftCounts.morning + shiftCounts.evening + shiftCounts.night;
+      const totalDuties = shiftCounts.morning + shiftCounts.evening + shiftCounts.night + shiftCounts.referral;
 
       analytics[doctor.id] = {
         doctor: doctor,

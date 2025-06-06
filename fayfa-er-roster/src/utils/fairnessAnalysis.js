@@ -41,6 +41,7 @@ class FairnessAnalysis {
       };
 
       const totalShifts = shiftCounts.morning + shiftCounts.evening + shiftCounts.night;
+      const totalDuties = totalShifts + shiftCounts.referral;
       const totalHours = totalShifts * 8;
       
       // Weekend analysis
@@ -62,16 +63,18 @@ class FairnessAnalysis {
         totals: {
           shifts: totalShifts,
           hours: totalHours,
-          duties: totalShifts + shiftCounts.referral,
+          duties: totalDuties,
           weekend: weekendDuties,
           holiday: holidayDuties,
           premium: premiumShifts
         },
         percentages: {
-          workload: Math.round((totalShifts / totalDays) * 100 * 10) / 10,
-          weekend: Math.round((weekendDuties / Math.max(totalShifts, 1)) * 100 * 10) / 10,
-          night: Math.round((shiftCounts.night / Math.max(totalShifts, 1)) * 100 * 10) / 10,
-          referral: Math.round((shiftCounts.referral / Math.max(totalShifts + shiftCounts.referral, 1)) * 100 * 10) / 10
+          workload: Math.round((totalDuties / totalDays) * 100 * 10) / 10,
+          weekend: Math.round((weekendDuties / Math.max(totalDuties, 1)) * 100 * 10) / 10,
+          night: Math.round((shiftCounts.night / Math.max(totalDuties, 1)) * 100 * 10) / 10,
+          referral: Math.round((shiftCounts.referral / Math.max(totalDuties, 1)) * 100 * 10) / 10,
+          morning: Math.round((shiftCounts.morning / Math.max(totalDuties, 1)) * 100 * 10) / 10,
+          evening: Math.round((shiftCounts.evening / Math.max(totalDuties, 1)) * 100 * 10) / 10
         }
       };
     });
