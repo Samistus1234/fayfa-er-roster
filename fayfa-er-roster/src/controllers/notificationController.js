@@ -90,6 +90,43 @@ const notificationController = {
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
+  },
+
+  createTestDuties: (req, res) => {
+    try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      // Create test duties for today at different times
+      const testDuties = [
+        {
+          doctorId: 1,
+          shift: 'morning',
+          date: new Date(today.getTime() + 1 * 60 * 60 * 1000), // 1 hour from now set as morning shift
+          isReferralDuty: false
+        },
+        {
+          doctorId: 2, 
+          shift: 'evening',
+          date: new Date(today.getTime() + 3 * 60 * 60 * 1000), // 3 hours from now set as evening shift
+          isReferralDuty: true
+        }
+      ];
+
+      const createdDuties = [];
+      testDuties.forEach(dutyData => {
+        const duty = Roster.add(dutyData);
+        createdDuties.push(duty);
+      });
+
+      res.json({
+        success: true,
+        message: `Created ${createdDuties.length} test duties for today`,
+        data: createdDuties
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
 };
 

@@ -110,11 +110,14 @@ class NotificationScheduler {
       
       if (result.success) {
         console.log(`✅ Notification sent successfully to ${doctor.name}`);
+        return { success: true, message: 'Notification sent successfully' };
       } else {
         console.error(`❌ Failed to send notification to ${doctor.name}: ${result.message}`);
+        return { success: false, message: result.message };
       }
     } catch (error) {
       console.error(`Error sending notification to ${doctor.name}:`, error);
+      return { success: false, message: error.message };
     }
   }
 

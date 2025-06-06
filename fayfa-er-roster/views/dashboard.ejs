@@ -48,9 +48,25 @@
                         <button class="btn btn-info w-100 mb-2" onclick="showAddRosterModal()">
                             <i class="fas fa-calendar-plus me-2"></i>Add Roster Entry
                         </button>
-                        <button class="btn btn-warning w-100 mb-2" onclick="loadNotifications()">
-                            <i class="fas fa-bell me-2"></i>View Notifications
-                        </button>
+                        <div class="dropdown mb-2">
+                            <button class="btn btn-warning dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell me-2"></i>Notifications
+                            </button>
+                            <ul class="dropdown-menu w-100">
+                                <li><a class="dropdown-item" href="#" onclick="loadNotifications()">
+                                    <i class="fas fa-eye me-2"></i>View Upcoming
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="createTestDuties()">
+                                    <i class="fas fa-plus-circle me-2"></i>Create Test Duties
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="forceCheckNotifications()">
+                                    <i class="fas fa-sync-alt me-2"></i>Check Now
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="sendTestNotification()">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Test Email
+                                </a></li>
+                            </ul>
+                        </div>
                         <button class="btn btn-secondary w-100 mb-2" onclick="showWorkloadAnalysis()">
                             <i class="fas fa-chart-line me-2"></i>Workload Analysis
                         </button>

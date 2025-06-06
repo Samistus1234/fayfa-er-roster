@@ -8,5 +8,6 @@ router.get('/scheduled', notificationController.getScheduledNotifications);
 router.post('/test', notificationController.sendTestNotification);
 router.post('/check', notificationController.forceCheckUpcomingDuties);
 router.post('/clear', notificationController.clearAllNotifications);
+router.post('/create-test-duties', notificationController.createTestDuties);
 
 module.exports = router;

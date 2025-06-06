@@ -104,9 +104,30 @@ class Roster {
     const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
     
     return this.roster.filter(entry => {
-      const dutyDate = new Date(entry.date);
-      return dutyDate <= twoHoursFromNow && dutyDate > now;
+      const dutyDateTime = this.getDutyDateTime(entry);
+      return dutyDateTime <= twoHoursFromNow && dutyDateTime > now;
     });
+  }
+
+  static getDutyDateTime(rosterEntry) {
+    const dutyDate = new Date(rosterEntry.date);
+    
+    // Set time based on shift
+    switch (rosterEntry.shift) {
+      case 'morning':
+        dutyDate.setHours(6, 0, 0, 0); // 6:00 AM
+        break;
+      case 'evening':
+        dutyDate.setHours(14, 0, 0, 0); // 2:00 PM
+        break;
+      case 'night':
+        dutyDate.setHours(22, 0, 0, 0); // 10:00 PM
+        break;
+      default:
+        dutyDate.setHours(6, 0, 0, 0); // Default to morning
+    }
+    
+    return dutyDate;
   }
 }
 
