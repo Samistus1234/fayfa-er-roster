@@ -60,6 +60,15 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/workload', workloadRoutes);
 app.use('/api/fairness', fairnessRoutes);
 
+// Health check endpoints for Google Cloud
+app.get('/_ah/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+app.get('/_ah/ready', (req, res) => {
+  res.status(200).send('Ready');
+});
+
 app.get('/', (req, res) => {
   res.render('dashboard', { hospital: 'Fayfa General Hospital' });
 });
