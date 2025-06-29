@@ -19,6 +19,10 @@ class Roster {
     new Roster(8, 3, 'evening', '2025-06-08'),
     new Roster(9, 4, 'night', '2025-06-08'),
     new Roster(10, 5, 'morning', '2025-06-09'),
+    // Test data for today (2025-06-28 in UTC)
+    new Roster(11, 8, 'morning', '2025-06-28'), // Dr. Fathi - Morning shift
+    new Roster(12, 9, 'evening', '2025-06-28'), // Dr. Mahasen - Evening shift
+    new Roster(13, 10, 'night', '2025-06-28'), // Dr. Joseph - Night shift
   ];
 
   static getAll() {
@@ -66,11 +70,12 @@ class Roster {
 
   static getDutyAnalytics(year, month) {
     const monthlyRoster = this.getByMonth(year, month);
-    const analytics = {};
+    const doctorAnalytics = {};
 
     const Doctor = require('./Doctor');
     const doctors = Doctor.getAll();
 
+    // Calculate doctor-specific analytics
     doctors.forEach(doctor => {
       const doctorDuties = monthlyRoster.filter(entry => entry.doctorId === doctor.id);
       
@@ -83,7 +88,7 @@ class Roster {
 
       const totalDuties = shiftCounts.morning + shiftCounts.evening + shiftCounts.night + shiftCounts.referral;
 
-      analytics[doctor.id] = {
+      doctorAnalytics[doctor.id] = {
         doctor: doctor,
         counts: shiftCounts,
         total: totalDuties,
@@ -96,7 +101,42 @@ class Roster {
       };
     });
 
-    return analytics;
+    // Calculate summary analytics for the dashboard
+    const totalShifts = monthlyRoster.filter(entry => !entry.isReferralDuty).length;
+    const referralDuties = monthlyRoster.filter(entry => entry.isReferralDuty).length;
+    const activeDoctors = new Set(monthlyRoster.map(entry => entry.doctorId)).size;
+    
+    // Calculate coverage rate (assuming 3 shifts per day for the month)
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const expectedShifts = daysInMonth * 3; // 3 shifts per day
+    const actualShifts = totalShifts + referralDuties;
+    const coverageRate = expectedShifts > 0 ? Math.round((actualShifts / expectedShifts) * 100) : 0;
+    
+    // Calculate referral percentage
+    const referralPercentage = (totalShifts + referralDuties) > 0 
+      ? Math.round((referralDuties / (totalShifts + referralDuties)) * 100) 
+      : 0;
+    
+    // Calculate average workload
+    const averageWorkload = activeDoctors > 0 
+      ? Math.round((totalShifts + referralDuties) / activeDoctors) 
+      : 0;
+
+    return {
+      // Summary statistics for dashboard
+      totalShifts: totalShifts,
+      activeDoctors: activeDoctors,
+      referralDuties: referralDuties,
+      coverageRate: coverageRate,
+      referralPercentage: referralPercentage,
+      averageWorkload: averageWorkload,
+      
+      // Detailed doctor analytics
+      doctorAnalysis: doctorAnalytics,
+      
+      // Monthly roster data
+      monthlyRoster: monthlyRoster
+    };
   }
 
   static getUpcomingDuties() {
@@ -128,6 +168,12 @@ class Roster {
     }
     
     return dutyDate;
+  }
+
+  // Get specialists available today (24-hour on-call specialists, not ER doctors)
+  static getSpecialistsToday() {
+    const SpecialistOnCall = require('./SpecialistOnCall');
+    return SpecialistOnCall.getTodayOnCall();
   }
 }
 

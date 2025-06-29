@@ -1,9 +1,9 @@
-runtime: nodejs18
+runtime: nodejs20
 
 env_variables:
   NODE_ENV: production
-  EMAIL_USER: your-email@gmail.com
-  EMAIL_PASS: your-gmail-app-password
+  EMAIL_USER: living4purpose247@gmail.com
+  EMAIL_PASS: afma pedd tcue xsogy
   EMAIL_FROM: "Fayfa ER Roster <noreply@fayfa.hospital>"
   PORT: 8080
 
@@ -34,3 +34,5 @@ health_check:
   unhealthy_threshold: 2
   healthy_threshold: 2
   restart_threshold: 60
+
+

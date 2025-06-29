@@ -9,6 +9,8 @@ const rosterRoutes = require('./routes/rosterRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const workloadRoutes = require('./routes/workloadRoutes');
 const fairnessRoutes = require('./routes/fairnessRoutes');
+const referralRoutes = require('./routes/referralRoutes');
+const licenseRoutes = require('./routes/licenseRoutes');
 
 // Initialize notification scheduler
 require('./utils/notificationScheduler');
@@ -35,11 +37,20 @@ app.use(helmet({
         "'self'", 
         "'unsafe-inline'", 
         "https://cdn.jsdelivr.net",
-        "https://cdnjs.cloudflare.com"
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.googleapis.com"
       ],
       fontSrc: [
         "'self'", 
-        "https://cdnjs.cloudflare.com"
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.gstatic.com",
+        "https://fonts.googleapis.com",
+        "data:"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com"
       ],
       imgSrc: ["'self'", "data:", "https:"],
     },
@@ -59,6 +70,8 @@ app.use('/api/roster', rosterRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/workload', workloadRoutes);
 app.use('/api/fairness', fairnessRoutes);
+app.use('/api/referrals', referralRoutes);
+app.use('/api/licenses', licenseRoutes);
 
 // Health check endpoints for Google Cloud
 app.get('/_ah/health', (req, res) => {
@@ -73,7 +86,7 @@ app.get('/', (req, res) => {
   res.render('dashboard', { hospital: 'Fayfa General Hospital' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 
 console.log('Starting server...');
