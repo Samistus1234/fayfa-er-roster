@@ -15,6 +15,7 @@ const consultationLogRoutes = require('./routes/consultationLogRoutes');
 const saudiCrescentRoutes = require('./routes/saudiCrescentRoutes');
 const medicalLicenseRoutes = require('./routes/medicalLicenseRoutes');
 const exportRoutes = require('./routes/exportRoutes');
+const licenseRoutes = require('./routes/licenseRoutes');
 
 // Initialize notification scheduler
 require('./utils/notificationScheduler');
@@ -49,10 +50,15 @@ app.use(helmet({
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
         "https://fonts.gstatic.com",
+        "https://fonts.googleapis.com",
         "data:"
       ],
+      connectSrc: [
+        "'self'",
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com"
+      ],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
     },
   },
 }));
@@ -78,12 +84,22 @@ app.use('/api/consultation-logs', consultationLogRoutes);
 app.use('/api/saudi-crescent', saudiCrescentRoutes);
 app.use('/api/medical-licenses', medicalLicenseRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/licenses', licenseRoutes);
+
+// Health check endpoints for Google Cloud
+app.get('/_ah/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+app.get('/_ah/ready', (req, res) => {
+  res.status(200).send('Ready');
+});
 
 app.get('/', (req, res) => {
   res.render('dashboard', { hospital: 'Fayfa General Hospital' });
 });
 
-const PORT = process.env.PORT || 3006;
+const PORT = process.env.PORT || 3001;
 const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 
 console.log('Starting server...');

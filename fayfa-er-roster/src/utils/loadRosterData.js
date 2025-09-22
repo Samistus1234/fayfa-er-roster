@@ -42,14 +42,19 @@ const doctorMap = {
 function loadJuneRoster() {
   console.log('Loading June 2025 roster data...');
   
-  // Clear existing roster entries for June 2025
+  // Clear existing roster entries for June 2025, but preserve test data for June 28th
   Roster.roster = Roster.roster.filter(entry => {
     const entryDate = new Date(entry.date);
-    return !(entryDate.getFullYear() === 2025 && entryDate.getMonth() === 5); // June is month 5 (0-indexed)
+    const isJune2025 = entryDate.getFullYear() === 2025 && entryDate.getMonth() === 5; // June is month 5 (0-indexed)
+    const isJune28 = entryDate.getDate() === 28;
+    
+    // Keep entries that are not in June 2025, or are June 28th test data
+    return !isJune2025 || (isJune2025 && isJune28 && entry.doctorId >= 8);
   });
 
   let entryId = Math.max(...Roster.roster.map(r => r.id), 0) + 1;
   let addedEntries = 0;
+  let skippedForTestData = 0;
 
   // Process each doctor's schedule
   Object.keys(rosterData).forEach(doctorName => {
@@ -59,6 +64,12 @@ function loadJuneRoster() {
     schedule.forEach((shiftCode, dayIndex) => {
       const date = new Date(2025, 5, dayIndex + 1); // June 2025, day 1-30
       const shift = convertShift(shiftCode);
+      
+      // Skip June 28th to preserve our test data
+      if (dayIndex + 1 === 28) {
+        skippedForTestData++;
+        return;
+      }
       
       if (shift) { // Only add if it's a valid shift (not off day)
         const isReferral = isReferralDuty(shiftCode);
@@ -79,6 +90,7 @@ function loadJuneRoster() {
   });
 
   console.log(`Successfully loaded ${addedEntries} roster entries for June 2025`);
+  console.log(`Skipped ${skippedForTestData} entries for June 28th (preserving test data)`);
   console.log(`Total roster entries: ${Roster.roster.length}`);
 }
 

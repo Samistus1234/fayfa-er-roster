@@ -3,112 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fayfa General Hospital - ER Roster Dashboard</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome - Using only jsdelivr CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" crossorigin="anonymous">
-
-    <!-- GSAP for animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
+    <title><%= hospital %> - ER Roster Dashboard</title>
+    
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Animation Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/dashboard.css">
-    <link rel="stylesheet" href="/css/dateConsultationModal.css">
-
-    <style>
-        /* Emergency CSS to ensure visibility */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-            background: #f0f4f8 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            display: block !important;
-            visibility: visible !important;
-        }
-        .main-container {
-            display: flex !important;
-            min-height: 100vh !important;
-            width: 100% !important;
-            position: relative !important;
-        }
-        .sidebar-modern {
-            width: 280px !important;
-            background: white !important;
-            border-right: 1px solid #e2e8f0 !important;
-            position: fixed !important;
-            height: 100vh !important;
-            overflow-y: auto !important;
-            z-index: 1000 !important;
-            left: 0 !important;
-            top: 0 !important;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        .main-content {
-            margin-left: 280px !important;
-            flex: 1 !important;
-            background: #f0f4f8 !important;
-            width: calc(100% - 280px) !important;
-            display: block !important;
-            visibility: visible !important;
-        }
-        .navbar-modern {
-            display: block !important;
-            visibility: visible !important;
-            background: white !important;
-            padding: 1rem 2rem !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-        }
-        .sidebar-section {
-            display: block !important;
-            visibility: visible !important;
-            padding: 1.5rem !important;
-        }
-        .quick-actions-grid {
-            display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 0.75rem !important;
-        }
-        .action-card {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            padding: 1rem !important;
-            background: white !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            cursor: pointer !important;
-        }
-        .stats-grid {
-            display: grid !important;
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 1rem !important;
-        }
-        /* Force Font Awesome icons to show */
-        .fas, .far, .fab {
-            font-family: "Font Awesome 6 Free", "FontAwesome", sans-serif !important;
-            font-weight: 900 !important;
-            display: inline-block !important;
-        }
-
-        /* Fallback for missing icons */
-        .fas::before, .far::before, .fab::before {
-            content: "●" !important;
-        }
-
-        /* Specific icon fallbacks */
-        .fa-hospital-user::before { content: "🏥" !important; }
-        .fa-calendar-alt::before { content: "📅" !important; }
-        .fa-sun::before { content: "☀️" !important; }
-        .fa-cloud-sun::before { content: "🌤️" !important; }
-        .fa-moon::before { content: "🌙" !important; }
-        .fa-user-md::before { content: "👨‍⚕️" !important; }
-        .fa-search::before { content: "🔍" !important; }
-    </style>
+    <link href="/css/dashboard.css" rel="stylesheet">
+    <link href="/css/mobile-responsive.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- Animated Background -->
@@ -122,445 +37,616 @@
         </div>
     </div>
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Sidebar -->
-        <div class="sidebar-modern">
-            <!-- Sidebar Header -->
-            <div class="sidebar-header">
-                <div class="d-flex align-items-center">
-                    <div class="brand-icon">
+    <!-- Modern Navigation -->
+    <nav class="navbar-modern glass-effect">
+        <div class="container-fluid px-4">
+            <div class="navbar-content">
+                <button class="mobile-menu-btn d-none" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="navbar-brand-modern">
+                    <div class="brand-icon pulse-hover">
                         <i class="fas fa-hospital-user"></i>
                     </div>
-                    <div class="ms-3">
-                        <h5 class="sidebar-title">Fayfa General Hospital</h5>
-                        <p class="sidebar-subtitle">Emergency Room Management</p>
+                    <div class="brand-text">
+                        <h4 class="mb-0"><%= hospital %></h4>
+                        <span class="subtitle">Emergency Room Management</span>
+                    </div>
+                </div>
+                
+                <div class="navbar-center">
+                    <div class="search-box glass-effect">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" placeholder="Search doctors, shifts, or dates..." class="search-input" id="globalSearch">
+                        <kbd class="search-shortcut">⌘K</kbd>
+                    </div>
+                </div>
+                
+                <div class="navbar-actions">
+                    <button class="icon-btn glass-effect notification-btn" onclick="showNotificationCenter()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge pulse">3</span>
+                    </button>
+                    
+                    <button class="icon-btn glass-effect" onclick="setLightMode()" title="Light Mode" id="lightModeBtn">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                    
+                    <button class="icon-btn glass-effect" onclick="setDarkMode()" title="Dark Mode" id="darkModeBtn">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <div class="user-menu glass-effect">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=667eea&color=fff" alt="User" class="user-avatar">
+                        <span class="user-name">Admin</span>
+                        <i class="fas fa-chevron-down ms-2"></i>
                     </div>
                 </div>
             </div>
+        </div>
+    </nav>
 
-            <!-- Period Selection -->
-            <div class="sidebar-section">
-                <div class="section-title">
-                    <i class="fas fa-calendar-alt"></i>
-                    PERIOD SELECTION
-                </div>
-                <div class="glass-effect main-card" style="padding: 1.5rem;">
+    <!-- Main Dashboard Container -->
+    <div class="dashboard-container">
+        <div class="dashboard-grid">
+            <!-- Modern Sidebar -->
+            <aside class="sidebar-modern glass-effect">
+                <div class="sidebar-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-calendar-alt me-2"></i>Period Selection
+                    </h6>
                     <div class="modern-input-group">
-                        <input type="month" class="modern-input glass-input" id="monthYear" value="2025-06">
+                        <input type="month" class="modern-input" id="monthYear" value="2025-06">
+                        <button class="modern-btn primary-btn w-100 mt-3" onclick="loadRosterData()">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            <span>Load Roster</span>
+                            <div class="btn-loader"></div>
+                        </button>
                     </div>
-                    <button class="modern-btn primary-btn glass-btn w-100 mt-3" onclick="loadRosterData()">
-                        <i class="fas fa-sync-alt me-2"></i>
-                        <span>Load Roster</span>
+                </div>
+
+                <div class="sidebar-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h6>
+                    <div class="quick-actions-grid">
+                        <button class="action-card glass-effect" onclick="showAddDoctorModal()">
+                            <div class="action-icon success-gradient">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <span>Add Doctor</span>
+                        </button>
+                        
+                        <button class="action-card glass-effect" onclick="showAddRosterModal()">
+                            <div class="action-icon info-gradient">
+                                <i class="fas fa-calendar-plus"></i>
+                            </div>
+                            <span>New Entry</span>
+                        </button>
+                        
+                        <button class="action-card glass-effect" onclick="showWorkloadAnalysis()">
+                            <div class="action-icon warning-gradient">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <span>Workload</span>
+                        </button>
+                        
+                        <button class="action-card glass-effect" onclick="showFairnessMetrics()">
+                            <div class="action-icon purple-gradient">
+                                <i class="fas fa-balance-scale"></i>
+                            </div>
+                            <span>Fairness</span>
+                        </button>
+                        
+                        <button class="action-card glass-effect" onclick="showConsultationLog()">
+                            <div class="action-icon danger-gradient">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <span>Consults</span>
+                        </button>
+                        
+                        <button class="action-card glass-effect" onclick="showReferralStats()">
+                            <div class="action-icon info-gradient">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <span>Referrals</span>
+                        </button>
+
+                        <button class="action-card glass-effect" onclick="showReferralEntry()">
+                            <div class="action-icon warning-gradient">
+                                <i class="fas fa-ambulance"></i>
+                            </div>
+                            <span>Log Referral</span>
+                        </button>
+                        
+                        <button class="action-card glass-effect" onclick="showSaudiCrescent()">
+                            <div class="action-icon success-gradient">
+                                <i class="fas fa-ambulance"></i>
+                            </div>
+                            <span>Saudi Crescent</span>
+                        </button>
+
+                        <button class="action-card glass-effect" onclick="showLicenseManager()">
+                            <div class="action-icon danger-gradient">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <span>Licenses</span>
+                        </button>
+                        
+                        <button class="action-card glass-effect" onclick="showImportRoster()">
+                            <div class="action-icon primary-gradient">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                            <span>Import</span>
+                        </button>
+                        
+                        <button class="action-card glass-effect" onclick="showExportMenu()">
+                            <div class="action-icon dark-gradient">
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <span>Export</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h6 class="section-title">
+                        <i class="fas fa-chart-pie me-2"></i>Quick Stats
+                    </h6>
+                    <div class="quick-stats">
+                        <div class="stat-item glass-effect">
+                            <div class="stat-value" id="totalDoctors">0</div>
+                            <div class="stat-label">Active Doctors</div>
+                        </div>
+                        <div class="stat-item glass-effect">
+                            <div class="stat-value" id="totalShifts">0</div>
+                            <div class="stat-label">Total Shifts</div>
+                        </div>
+                        <div class="stat-item glass-effect">
+                            <div class="stat-value" id="avgWorkload">0</div>
+                            <div class="stat-label">Avg<br>Workload</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Analytics Dashboard -->
+                <section class="dashboard-section animate__animated animate__fadeIn">
+                    <div class="section-header glass-effect">
+                        <div class="header-content">
+                            <h2 class="section-title">
+                                <i class="fas fa-chart-bar me-2"></i>Analytics Overview
+                            </h2>
+                            <span class="current-period badge-modern" id="currentMonth"></span>
+                        </div>
+                        <div class="header-actions">
+                            <button class="icon-btn glass-effect" onclick="refreshAnalytics()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="icon-btn glass-effect" onclick="exportAnalytics('pdf')">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="analyticsContent" class="analytics-grid">
+                        <!-- Loading State -->
+                        <div class="loading-state">
+                            <div class="loader-modern">
+                                <div class="loader-ring"></div>
+                                <div class="loader-ring"></div>
+                                <div class="loader-ring"></div>
+                            </div>
+                            <p class="loading-text">Loading analytics data...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Monthly Roster Section -->
+                <section class="dashboard-section animate__animated animate__fadeIn animate__delay-1s">
+                    <div class="section-header glass-effect">
+                        <div class="header-content">
+                            <h2 class="section-title">
+                                <i class="fas fa-calendar-week me-2"></i>Monthly Roster
+                            </h2>
+                        </div>
+                        <div class="header-actions">
+                            <div class="view-toggle glass-effect">
+                                <button class="toggle-btn active" type="button" data-view="table">
+                                    <i class="fas fa-table"></i>
+                                </button>
+                                <button class="toggle-btn" type="button" data-view="calendar">
+                                    <i class="fas fa-calendar"></i>
+                                </button>
+                                <button class="toggle-btn" type="button" data-view="timeline">
+                                    <i class="fas fa-stream"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="rosterContent" class="roster-content">
+                        <!-- Loading State -->
+                        <div class="empty-state glass-effect">
+                            <div class="empty-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h3>No roster data available</h3>
+                            <p>Select a month to view roster details</p>
+                            <button class="modern-btn primary-btn" onclick="document.getElementById('monthYear').focus()">
+                                <i class="fas fa-calendar-plus me-2"></i>Select Month
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Dynamic Sections Container -->
+                <div id="dynamicSections" class="dynamic-sections">
+                    <!-- Workload Analysis (Hidden by default) -->
+                    <section class="dashboard-section workload-section" id="workloadSection" style="display: none;">
+                        <div class="section-header glass-effect">
+                            <div class="header-content">
+                                <h2 class="section-title">
+                                    <i class="fas fa-chart-line me-2"></i>Workload Distribution
+                                </h2>
+                            </div>
+                            <button class="icon-btn glass-effect" onclick="hideWorkloadAnalysis()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="workloadContent" class="section-content"></div>
+                    </section>
+
+                    <!-- Fairness Metrics (Hidden by default) -->
+                    <section class="dashboard-section fairness-section" id="fairnessSection" style="display: none;">
+                        <div class="section-header glass-effect">
+                            <div class="header-content">
+                                <h2 class="section-title">
+                                    <i class="fas fa-balance-scale me-2"></i>Fairness & Equity
+                                </h2>
+                            </div>
+                            <button class="icon-btn glass-effect" onclick="hideFairnessMetrics()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="fairnessContent" class="section-content"></div>
+                    </section>
+
+                    <!-- Consultation Log (Hidden by default) -->
+                    <section class="dashboard-section consultation-section" id="consultationSection" style="display: none;">
+                        <div class="section-header glass-effect consultation-header">
+                            <div class="header-content">
+                                <h2 class="section-title text-white">
+                                    <i class="fas fa-clipboard-list me-2"></i>Consultation Log
+                                </h2>
+                                <span class="header-subtitle">Track specialist responses</span>
+                            </div>
+                            <button class="icon-btn glass-effect" onclick="hideConsultationLog()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="consultationContent" class="section-content">
+                            <!-- Consultation form content will be dynamically loaded -->
+                        </div>
+                    </section>
+                    
+                    <!-- Referral Statistics (Hidden by default) -->
+                    <section class="dashboard-section referral-section" id="referralSection" style="display: none;">
+                        <div class="section-header glass-effect info-gradient">
+                            <div class="header-content">
+                                <h2 class="section-title text-white">
+                                    <i class="fas fa-exchange-alt me-2"></i>Referral Statistics
+                                </h2>
+                                <span class="header-subtitle">Track emergency and life-saving referrals</span>
+                            </div>
+                            <button class="icon-btn glass-effect" onclick="hideReferralStats()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="referralContent" class="section-content">
+                            <!-- Referral statistics content will be dynamically loaded -->
+                        </div>
+                    </section>
+
+                    <!-- Referral Entry Form (Hidden by default) -->
+                    <section class="dashboard-section referral-entry-section" id="referralEntrySection" style="display: none;">
+                        <div class="section-header glass-effect warning-gradient">
+                            <div class="header-content">
+                                <h2 class="section-title text-white">
+                                    <i class="fas fa-ambulance me-2"></i>Log Referral
+                                </h2>
+                                <span class="header-subtitle">Enter your referral details</span>
+                            </div>
+                            <button class="icon-btn glass-effect" onclick="hideReferralEntry()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="referralEntryContent" class="section-content">
+                            <!-- Referral entry form content will be dynamically loaded -->
+                        </div>
+                    </section>
+
+                    <!-- License Manager (Hidden by default) -->
+                    <section class="dashboard-section license-section" id="licenseSection" style="display: none;">
+                        <div class="section-header glass-effect danger-gradient">
+                            <div class="header-content">
+                                <h2 class="section-title text-white">
+                                    <i class="fas fa-certificate me-2"></i>License & Certificate Manager
+                                </h2>
+                                <span class="header-subtitle">Track and manage professional licenses</span>
+                            </div>
+                            <button class="icon-btn glass-effect" onclick="hideLicenseManager()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="licenseContent" class="section-content">
+                            <!-- License management content will be dynamically loaded -->
+                        </div>
+                    </section>
+                    
+                    <!-- Saudi Crescent (Hidden by default) -->
+                    <section class="dashboard-section saudi-crescent-section" id="saudiCrescentSection" style="display: none;">
+                        <div class="section-header glass-effect success-gradient">
+                            <div class="header-content">
+                                <h2 class="section-title text-white">
+                                    <i class="fas fa-ambulance me-2"></i>Saudi Red Crescent
+                                </h2>
+                                <span class="header-subtitle">Track ambulance referrals and handover times</span>
+                            </div>
+                            <button class="icon-btn glass-effect" onclick="hideSaudiCrescent()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="saudiCrescentContent" class="section-content">
+                            <!-- Saudi Crescent content will be dynamically loaded -->
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Command Palette Modal -->
+    <div class="command-palette" id="commandPalette">
+        <div class="command-palette-backdrop" onclick="closeCommandPalette()"></div>
+        <div class="command-palette-modal glass-effect">
+            <div class="command-search">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Type a command or search..." id="commandInput">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="command-results" id="commandResults">
+                <!-- Dynamic command results -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modern Modals -->
+    <!-- Add Doctor Modal -->
+    <div class="modal fade modern-modal" id="addDoctorModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-effect">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-plus me-2"></i>Add New Doctor
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addDoctorForm" class="modern-form">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control modern-input" id="doctorName" placeholder="Doctor Name" required>
+                            <label for="doctorName">Doctor Name</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control modern-input" id="doctorEmail" placeholder="Email" required>
+                            <label for="doctorEmail">Email Address</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="tel" class="form-control modern-input" id="doctorPhone" placeholder="Phone" required>
+                            <label for="doctorPhone">Phone Number</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <select class="form-control modern-input" id="doctorSpecialization" required>
+                                <option value="">Select Specialization</option>
+                                <option value="Emergency Medicine">Emergency Medicine</option>
+                                <option value="Internal Medicine">Internal Medicine</option>
+                                <option value="Surgery">Surgery</option>
+                                <option value="Pediatrics">Pediatrics</option>
+                            </select>
+                            <label for="doctorSpecialization">Specialization</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="modern-btn secondary-btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="modern-btn primary-btn" onclick="addDoctor()">
+                        <i class="fas fa-check me-2"></i>Add Doctor
+                        <div class="btn-loader"></div>
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Quick Actions -->
-            <div class="sidebar-section">
-                <div class="section-title">
-                    <i class="fas fa-bolt"></i>
-                    QUICK ACTIONS
+    <!-- Add Roster Modal -->
+    <div class="modal fade modern-modal" id="addRosterModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-effect">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-calendar-plus me-2"></i>Add Roster Entry
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="quick-actions-grid">
-                    <div class="action-card" onclick="showConsults()">
-                        <div class="action-icon" style="background: var(--info-gradient);">
-                            <i class="fas fa-user-md"></i>
+                <div class="modal-body">
+                    <form id="addRosterForm" class="modern-form">
+                        <div class="form-floating mb-3">
+                            <select class="form-control modern-input" id="rosterDoctor" required>
+                                <option value="">Select a doctor...</option>
+                            </select>
+                            <label for="rosterDoctor">Doctor</label>
                         </div>
-                        <div class="action-title">Consults</div>
-                    </div>
-                    <div class="action-card" onclick="showReferrals()">
-                        <div class="action-icon" style="background: var(--success-gradient);">
-                            <i class="fas fa-ambulance"></i>
+                        <div class="form-floating mb-3">
+                            <select class="form-control modern-input" id="rosterShift" required>
+                                <option value="">Select shift...</option>
+                                <option value="morning">Morning (6AM - 2PM)</option>
+                                <option value="evening">Evening (2PM - 10PM)</option>
+                                <option value="night">Night (10PM - 6AM)</option>
+                            </select>
+                            <label for="rosterShift">Shift</label>
                         </div>
-                        <div class="action-title">Referrals</div>
-                    </div>
-                    <div class="action-card" onclick="try { showConsultationLog(); } catch(e) { console.error('Primary function failed:', e); window.emergencyShowConsultationLog(); }">
-                        <div class="action-icon" style="background: var(--warning-gradient);">
-                            <i class="fas fa-clipboard-list"></i>
+                        <div class="form-floating mb-3">
+                            <input type="date" class="form-control modern-input" id="rosterDate" required>
+                            <label for="rosterDate">Date</label>
                         </div>
-                        <div class="action-title">Consultation Log</div>
-                    </div>
-                    <div class="action-card" onclick="showSaudiCrescent()">
-                        <div class="action-icon" style="background: var(--danger-gradient);">
-                            <i class="fas fa-crescent-moon"></i>
+                        <div class="modern-checkbox mb-3">
+                            <input type="checkbox" id="isReferralDuty">
+                            <label for="isReferralDuty">
+                                <i class="fas fa-check"></i>
+                                <span>Referral Duty</span>
+                            </label>
                         </div>
-                        <div class="action-title">Saudi Crescent</div>
-                    </div>
-                    <div class="action-card" onclick="openLicenseCenter()">
-                        <div class="action-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <i class="fas fa-id-card"></i>
-                        </div>
-                        <div class="action-title">License Center</div>
-                    </div>
-                    <div class="action-card" onclick="openDataImporter()">
-                        <div class="action-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                            <i class="fas fa-upload"></i>
-                        </div>
-                        <div class="action-title">Data Import</div>
-                    </div>
-                    <div class="action-card" onclick="openExportHub()">
-                        <div class="action-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                            <i class="fas fa-download"></i>
-                        </div>
-                        <div class="action-title">Export Hub</div>
-                    </div>
+                    </form>
                 </div>
-            </div>
-
-            <!-- Quick Stats -->
-            <div class="sidebar-section">
-                <div class="section-title">
-                    <i class="fas fa-chart-bar"></i>
-                    QUICK STATS
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="activeDoctorsCount">10</div>
-                        <div class="stat-label">Active Doctors</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalShiftsCount">114</div>
-                        <div class="stat-label">Total Shifts</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="avgWorkloadCount">15</div>
-                        <div class="stat-label">Avg Workload</div>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="modern-btn secondary-btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="modern-btn primary-btn" onclick="addRosterEntry()">
+                        <i class="fas fa-check me-2"></i>Add Entry
+                        <div class="btn-loader"></div>
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Top Navbar -->
-            <div class="navbar-modern">
-                <div class="navbar-content">
-                    <!-- Search -->
-                    <div class="search-container">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" id="globalSearch" placeholder="Search doctors, shifts, or dates...">
-                        <div class="search-shortcut">⌘K</div>
-                    </div>
-
-                    <!-- Right Side -->
-                    <div class="navbar-nav-modern">
-                        <!-- Specialists Available Today -->
-                        <div class="specialists-indicator" onclick="showSpecialistsDetails()">
-                            <i class="fas fa-user-md"></i>
-                            <span id="specialistsTodayCount">3</span>
-                        </div>
-
-                        <!-- Theme Toggle -->
-                        <button class="theme-toggle" id="lightModeBtn" onclick="setLightMode()">
-                            <i class="fas fa-sun"></i>
-                        </button>
-                        <button class="theme-toggle" id="darkModeBtn" onclick="setDarkMode()">
-                            <i class="fas fa-moon"></i>
-                        </button>
-
-                        <!-- User Menu -->
-                        <div class="user-menu">
-                            <div class="user-avatar">Ad</div>
-                            <div class="user-info">
-                                <h6>Admin</h6>
-                                <small>Administrator</small>
-                            </div>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                    </div>
+    <!-- Import Roster Modal -->
+    <div class="modal fade modern-modal" id="importRosterModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-effect">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-upload me-2"></i>Import Monthly Roster
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
-                <!-- Stats Cards -->
-                <div class="stats-cards-row">
-                    <div class="stat-card glass-effect">
-                        <div class="stat-icon" style="background: var(--primary-gradient);">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="totalShiftsDisplay">114</div>
-                            <div class="stat-label">Total Shifts</div>
-                        </div>
+                <div class="modal-body">
+                    <div class="import-instructions alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>File Requirements:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Supported formats: CSV, Excel (.xlsx, .xls)</li>
+                            <li>Required columns: Date, Doctor Name, Shift, Area (optional), Referral Duty (optional)</li>
+                            <li>Date format: YYYY-MM-DD or DD/MM/YYYY</li>
+                            <li>Shifts: Morning, Evening, Night</li>
+                        </ul>
                     </div>
-                    <div class="stat-card glass-effect">
-                        <div class="stat-icon" style="background: var(--success-gradient);">
-                            <i class="fas fa-user-md"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="activeDoctorsDisplay">10</div>
-                            <div class="stat-label">Active Doctors</div>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-effect">
-                        <div class="stat-icon" style="background: var(--warning-gradient);">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="referralDutiesDisplay">33</div>
-                            <div class="stat-label">Referral Duties</div>
-                            <div class="stat-percentage">22%</div>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-effect">
-                        <div class="stat-icon" style="background: var(--info-gradient);">
-                            <i class="fas fa-stethoscope"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="specialistsAvailableDisplay">3</div>
-                            <div class="stat-label">Specialists Available Today</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Monthly Roster Calendar -->
-                <div class="roster-section glass-effect">
-                    <div class="section-header">
-                        <div class="section-title">
-                            <i class="fas fa-calendar-alt"></i>
-                            MONTHLY ROSTER
-                        </div>
-                        <div class="section-actions">
-                            <div class="roster-info">
-                                <span><i class="fas fa-calendar-day"></i> <span id="monthDays">30</span> Days</span>
-                                <span><i class="fas fa-clock"></i> <span id="totalShiftsInfo">147</span> Total Shifts</span>
-                                <span><i class="fas fa-users"></i> <span id="activeDoctorsInfo">10</span> Active Doctors</span>
+                    
+                    <div class="template-download-section mb-4">
+                        <h6 class="mb-3"><i class="fas fa-download me-2"></i>Download Template</h6>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="modern-btn info-btn" onclick="downloadRosterTemplate('csv')">
+                                <i class="fas fa-file-csv me-2"></i>CSV Template
+                            </button>
+                            <button type="button" class="modern-btn success-btn" onclick="downloadRosterTemplate('xlsx')">
+                                <i class="fas fa-file-excel me-2"></i>Excel Template
+                            </button>
+                            <!-- Direct download links as fallback -->
+                            <div class="w-100 mt-2">
+                                <small class="text-muted">Direct downloads: 
+                                    <a href="/templates/roster-template.csv" download class="text-info">CSV</a> | 
+                                    <a href="/templates/roster-template.xlsx" download class="text-success">Excel</a>
+                                </small>
                             </div>
+                        </div>
+                        <p class="text-muted mt-2 mb-0">
+                            <small>Download a pre-formatted template with sample data and instructions</small>
+                        </p>
+                        <div class="alert alert-warning mt-2" style="display: none;" id="templateError">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <small>If downloads fail, try the direct download links above.</small>
                         </div>
                     </div>
                     
-                    <!-- Calendar Grid -->
-                    <div class="calendar-container" id="calendarContainer">
-                        <!-- Calendar will be populated by JavaScript -->
-                    </div>
-
-                    <!-- Shift Legend -->
-                    <div class="shift-legend glass-effect" style="margin-top: 1rem; padding: 1rem;">
-                        <div class="legend-title">
-                            <i class="fas fa-clock"></i>
-                            <span>Shift Schedule</span>
+                    <form id="importRosterForm" class="modern-form">
+                        <div class="mb-3">
+                            <label for="importMonth" class="form-label">Month to Import</label>
+                            <input type="month" class="form-control modern-input" id="importMonth" required>
                         </div>
-                        <div class="legend-items">
-                            <div class="legend-item">
-                                <div class="shift-indicator morning"></div>
-                                <span>Morning: 7:00 AM - 3:00 PM</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="shift-indicator evening"></div>
-                                <span>Evening: 3:00 PM - 11:00 PM</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="shift-indicator night"></div>
-                                <span>Night: 11:00 PM - 7:00 AM</span>
+                        
+                        <div class="mb-3">
+                            <label for="rosterFile" class="form-label">Select File</label>
+                            <input type="file" class="form-control modern-input" id="rosterFile" 
+                                   accept=".csv,.xlsx,.xls" required>
+                            <div class="form-text">Maximum file size: 5MB</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="replaceExisting">
+                                <label class="form-check-label" for="replaceExisting">
+                                    Replace existing roster data for this month
+                                </label>
                             </div>
                         </div>
+                    </form>
+                    
+                    <!-- Preview Section -->
+                    <div id="importPreview" class="mt-4" style="display: none;">
+                        <h6 class="mb-3">Preview (First 5 rows)</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="previewTable">
+                                <thead></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="importStats" class="mt-3"></div>
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="modern-btn secondary-btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="modern-btn info-btn" onclick="previewImport()" id="previewBtn">
+                        <i class="fas fa-eye me-2"></i>Preview
+                    </button>
+                    <button type="button" class="modern-btn primary-btn" onclick="confirmImport()" 
+                            id="importBtn" style="display: none;">
+                        <i class="fas fa-check me-2"></i>Import
+                        <div class="btn-loader"></div>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Consultation Modal -->
-    <div id="consultationModal" class="modal-overlay" style="display: none;">
-        <div class="consultation-modal glass-card">
-            <div class="modal-header">
-                <div class="header-content">
-                    <div class="header-icon">
-                        <i class="fas fa-user-md"></i>
-                    </div>
-                    <div>
-                        <h2>Consultation Management</h2>
-                        <p>Track specialist responses and manage consultation requests</p>
-                    </div>
-                </div>
-                <button class="close-btn" onclick="closeConsultationModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="consultationModalBody">
-                <!-- Content will be loaded dynamically -->
-            </div>
-        </div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Floating Action Button for Mobile -->
+    <div class="fab-container d-none">
+        <button class="fab-btn" onclick="showAddDutyModal()">
+            <i class="fas fa-plus"></i>
+        </button>
     </div>
 
-    <!-- Referral Modal -->
-    <div id="referralModal" class="modal-overlay" style="display: none;">
-        <div class="referral-modal glass-card">
-            <div class="modal-header">
-                <div class="header-content">
-                    <div class="header-icon">
-                        <i class="fas fa-ambulance"></i>
-                    </div>
-                    <div>
-                        <h2>Referral Management</h2>
-                        <p>Track emergency and life-saving referrals</p>
-                    </div>
-                </div>
-                <button class="close-btn" onclick="closeReferralModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="referralModalBody">
-                <!-- Content will be loaded dynamically -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Consultation Log Modal -->
-    <div id="consultationLogModal" class="modal-overlay" style="display: none;">
-        <div class="consultation-log-modal glass-card">
-            <div class="modal-header">
-                <div class="header-content">
-                    <div class="header-icon">
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                    <div>
-                        <h2>CONSULTATION LOG</h2>
-                        <p>Track specialist responses</p>
-                    </div>
-                </div>
-                <button class="close-btn" onclick="closeConsultationLogModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="consultationLogModalBody">
-                <!-- Content will be loaded dynamically -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Saudi Red Crescent Modal -->
-    <div id="saudiCrescentModal" class="modal-overlay" style="display: none;">
-        <div class="saudi-crescent-modal glass-card">
-            <div class="modal-header">
-                <div class="header-content">
-                    <div class="header-icon">
-                        <i class="fas fa-crescent-moon"></i>
-                    </div>
-                    <div>
-                        <h2>SAUDI RED CRESCENT</h2>
-                        <p>Track ambulance referrals and handover times</p>
-                    </div>
-                </div>
-                <button class="close-btn" onclick="closeSaudiCrescentModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="saudiCrescentModalBody">
-                <!-- Content will be loaded dynamically -->
-            </div>
-        </div>
-    </div>
-
-    <!-- License Center Modal -->
-    <div id="licenseCenterModal" class="modal-overlay" style="display: none;">
-        <div class="license-center-modal glass-card">
-            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="header-content">
-                    <div class="header-icon">
-                        <i class="fas fa-id-card"></i>
-                    </div>
-                    <div>
-                        <h2>LICENSE CENTER</h2>
-                        <p>Manage professional credentials and certifications</p>
-                    </div>
-                </div>
-                <button class="close-btn" onclick="closeLicenseCenter()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="licenseCenterBody">
-                <!-- Content will be loaded dynamically -->
-            </div>
-        </div>
-    </div>
-
-
-<!-- Export Hub Modal -->
-<div id="exportHubModal" class="modal-overlay" style="display: none;">
-    <div class="export-hub-modal glass-card">
-        <div class="modal-header" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-            <div class="header-content">
-                <div class="header-icon">
-                    <i class="fas fa-download"></i>
-                </div>
-                <div>
-                    <h2>EXPORT HUB</h2>
-                    <p>Download data, analytics, and comprehensive reports</p>
-                </div>
-            </div>
-            <button class="close-btn" onclick="closeExportHub()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body" id="exportHubBody">
-            <!-- Content will be loaded dynamically -->
-        </div>
-    </div>
-</div>
-
-<!-- Data Import Modal -->
-<div id="dataImportModal" class="modal-overlay" style="display: none;">
-    <div class="data-import-modal glass-card">
-        <div class="modal-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <div class="header-content">
-                <div class="header-icon">
-                    <i class="fas fa-upload"></i>
-                </div>
-                <div>
-                    <h2>DATA IMPORT</h2>
-                    <p>Upload and import roster data, staff info, and configurations</p>
-                </div>
-            </div>
-            <button class="close-btn" onclick="closeDataImporter()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body" id="dataImportBody">
-            <!-- Content will be loaded dynamically -->
-        </div>
-    </div>
-</div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- PDF Generation Libraries - Locally Installed -->
-<script src="/node_modules/jspdf/dist/jspdf.umd.min.js"></script>
-<script src="/node_modules/html2canvas/dist/html2canvas.min.js"></script>
-
-<script>
-// Verify PDF libraries are loaded
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-        const jsPDFAvailable = typeof window.jsPDF !== 'undefined';
-        const html2canvasAvailable = typeof window.html2canvas !== 'undefined';
-
-        if (jsPDFAvailable && html2canvasAvailable) {
-            console.log('✅ PDF generation libraries loaded successfully from local installation!');
-            window.pdfLibrariesReady = true;
-        } else {
-            console.error('❌ PDF libraries not available:', {
-                jsPDF: jsPDFAvailable,
-                html2canvas: html2canvasAvailable
-            });
-            window.pdfLibrariesReady = false;
-        }
-    }, 100);
-});
-</script>
-
-    <!-- Custom JavaScript -->
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="/js/unifiedPDFService.js?v=<%= Date.now() %>"></script>
     <script src="/js/exportUtils.js?v=<%= Date.now() %>"></script>
+    <script src="/js/exportHub.js?v=<%= Date.now() %>"></script>
     <script src="/js/dashboard.js"></script>
     <script src="/js/licenseCenter.js?v=<%= Date.now() %>"></script>
-    <script src="/js/exportHub.js?v=<%= Date.now() %>"></script>
-    <script src="/js/dataImporter.js?v=<%= Date.now() %>"></script>
-    <script src="/js/dateConsultationModal.js?v=<%= Date.now() %>"></script>
-    <script src="/js/consultationLogTableEnhancer.js?v=<%= Date.now() %>"></script>
-    <script src="/js/consultationLogManager.js?v=<%= Date.now() %>"></script>
-    <script src="/js/sectionManager.js?v=<%= Date.now() %>"></script>
 </body>
 </html>

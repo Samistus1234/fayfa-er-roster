@@ -1,0 +1,38 @@
+runtime: nodejs20
+
+env_variables:
+  NODE_ENV: production
+  EMAIL_USER: living4purpose247@gmail.com
+  EMAIL_PASS: afma pedd tcue xsogy
+  EMAIL_FROM: "Fayfa ER Roster <noreply@fayfa.hospital>"
+  PORT: 8080
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+handlers:
+  - url: /css
+    static_dir: public/css
+    secure: always
+  - url: /js
+    static_dir: public/js
+    secure: always
+  - url: /images
+    static_dir: public/images
+    secure: always
+  - url: /.*
+    script: auto
+    secure: always
+
+# Health check configuration
+health_check:
+  enable_health_check: true
+  check_interval_sec: 5
+  timeout_sec: 4
+  unhealthy_threshold: 2
+  healthy_threshold: 2
+  restart_threshold: 60
+
+

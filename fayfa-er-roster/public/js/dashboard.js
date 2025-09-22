@@ -1,214 +1,44 @@
 // Modern Dashboard JavaScript with Animations
 let currentAnalytics = null;
-let currentRoster = [];
+let currentRoster = null;
 let doctors = [];
 let charts = {};
 let currentView = 'table';
-let currentTheme = 'light';
-
-// Debug function - accessible from console
-window.debugCalendar = function() {
-    console.log('Current roster:', currentRoster ? currentRoster.length : 0, 'entries');
-    console.log('Doctors:', doctors.length, 'entries');
-    if (currentRoster && currentRoster.length > 0) {
-        renderCalendar(2025, 6);
-    } else {
-        console.log('No roster data to render');
-    }
-};
-
-// Test data filtering for June 1st
-window.testJune1 = function() {
-    if (!currentRoster || currentRoster.length === 0) {
-        console.log('No roster data available');
-        return;
-    }
-
-    const dateString = '2025-06-01';
-    const dayShifts = currentRoster.filter(r =>
-        r.date.split('T')[0] === dateString
-    );
-
-    console.log('June 1st test:');
-    console.log('Date string:', dateString);
-    console.log('Total shifts found:', dayShifts.length);
-    console.log('Shifts:', dayShifts.map(s => ({
-        doctor: s.doctorName,
-        shift: s.shift,
-        date: s.date,
-        dateOnly: s.date.split('T')[0]
-    })));
-
-    // Test specialist filtering
-    console.log('Specialist test:');
-    console.log('Specialists list:', specialists);
-    dayShifts.forEach(shift => {
-        console.log(`${shift.doctorName} is specialist:`, isSpecialist(shift.doctorName));
-    });
-
-    // Test avatar rendering
-    if (dayShifts.length > 0) {
-        console.log('Testing avatar rendering for first shift:');
-        const testAvatar = renderDoctorAvatar(dayShifts[0], dayShifts[0].shift);
-        console.log('Generated avatar HTML:', testAvatar);
-    }
-};
-
-// Test all dates in roster
-window.testAllDates = function() {
-    if (!currentRoster || currentRoster.length === 0) {
-        console.log('No roster data available');
-        return;
-    }
-
-    const uniqueDates = [...new Set(currentRoster.map(r => r.date.split('T')[0]))].sort();
-    console.log('All unique dates in roster:', uniqueDates);
-    console.log('First 10 dates:', uniqueDates.slice(0, 10));
-    console.log('Last 10 dates:', uniqueDates.slice(-10));
-};
-
-// Test July data specifically
-window.testJuly = function() {
-    if (!currentRoster || currentRoster.length === 0) {
-        console.log('No roster data available');
-        return;
-    }
-
-    const julyShifts = currentRoster.filter(r => r.date.includes('2025-07'));
-    console.log('July 2025 shifts found:', julyShifts.length);
-
-    // Test Dr. Hiba's vacation period (should be absent July 1-21)
-    const hibaShifts = julyShifts.filter(r => r.doctorName === 'Dr. Hiba');
-    console.log('Dr. Hiba shifts in July:', hibaShifts.length);
-    console.log('Dr. Hiba shift dates:', hibaShifts.map(s => s.date.split('T')[0]));
-
-    // Test July 22nd when Dr. Hiba returns
-    const july22 = julyShifts.filter(r => r.date.includes('2025-07-22'));
-    console.log('July 22nd shifts (Dr. Hiba returns):', july22.map(s => ({
-        doctor: s.doctorName,
-        shift: s.shift,
-        referral: s.isReferralDuty
-    })));
-};
-
-// Test manual calendar population
-window.testManualCalendar = function() {
-    const calendarContainer = document.getElementById('calendarContainer');
-    if (!calendarContainer) {
-        console.log('Calendar container not found');
-        return;
-    }
-
-    // Create a simple test calendar day
-    const testHTML = `
-        <div class="calendar-day">
-            <div class="day-header">
-                <div>
-                    <div class="day-number">1</div>
-                    <div class="day-name">Sun</div>
-                </div>
-            </div>
-            <div class="shifts-container">
-                <div class="shift-section">
-                    <div class="shift-header">
-                        <i class="fas fa-sun"></i>
-                        <span>Morning</span>
-                        <div class="shift-count">2</div>
-                    </div>
-                    <div class="doctors-list">
-                        <div class="doctor-avatar morning">
-                            <div class="avatar-circle" style="background: #667eea;">
-                                AH
-                            </div>
-                            <div class="doctor-name">Ahmed</div>
-                        </div>
-                        <div class="doctor-avatar morning">
-                            <div class="avatar-circle" style="background: #764ba2;">
-                                AK
-                            </div>
-                            <div class="doctor-name">Akin</div>
-                            <div class="referral-badge">R</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    calendarContainer.innerHTML = testHTML;
-    console.log('Manual test calendar populated');
-};
 
 // Initialize on DOM Load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing app...');
-    try {
-        initializeApp();
-        setupEventListeners();
-        setupAnimations();
-        setupKeyboardShortcuts();
-        console.log('App initialized successfully');
-    } catch (error) {
-        console.error('Error initializing app:', error);
-        // Show basic interface even if there's an error
-        document.body.style.display = 'block';
-    }
+    initializeApp();
+    setupEventListeners();
+    setupAnimations();
+    setupKeyboardShortcuts();
 });
 
 // Initialize Application
 async function initializeApp() {
-    try {
-        console.log('Starting app initialization...');
-
-        // Load saved theme first
-        loadTheme();
-
-        // Show loading animation
-        showGlobalLoader();
-
-        // Load initial data
-        console.log('Loading doctors...');
-        await loadDoctors();
-
-        console.log('Setting default month...');
-        setDefaultMonth();
-
-        // Load initial roster data
-        console.log('Loading roster data...');
-        await loadRosterData();
-
-        // Animate entrance
-        console.log('Animating entrance...');
-        animatePageEntrance();
-
-        // Hide loader
-        hideGlobalLoader();
-
-        // Update stats
-        updateQuickStats();
-
-        // Load specialists available today
-        try {
-            loadSpecialistsToday();
-        } catch (specialistError) {
-            console.warn('Could not load specialists:', specialistError);
-        }
-
-        // Refresh specialists every 5 minutes
-        setInterval(() => {
-            try {
-                loadSpecialistsToday();
-            } catch (error) {
-                console.warn('Error refreshing specialists:', error);
-            }
-        }, 5 * 60 * 1000);
-
-        console.log('App initialization completed successfully');
-    } catch (error) {
-        console.error('Error during app initialization:', error);
-        hideGlobalLoader();
-        showToast('Error loading application. Some features may not work.', 'error');
-    }
+    // Load saved theme first
+    loadTheme();
+    
+    // Show loading animation
+    showGlobalLoader();
+    
+    // Load initial data
+    await loadDoctors();
+    setDefaultMonth();
+    
+    // Animate entrance
+    animatePageEntrance();
+    
+    // Hide loader
+    hideGlobalLoader();
+    
+    // Update stats
+    updateQuickStats();
+    
+    // Load specialists available today
+    loadSpecialistsToday();
+    
+    // Refresh specialists every 5 minutes
+    setInterval(loadSpecialistsToday, 5 * 60 * 1000);
 }
 
 // Load Specialists Available Today
@@ -225,32 +55,6 @@ async function loadSpecialistsToday() {
     }
 }
 
-// Animate Stat Counter
-function animateStatCounter(element, targetValue) {
-    if (typeof gsap === 'undefined') {
-        element.textContent = targetValue;
-        return;
-    }
-
-    try {
-        gsap.fromTo(element,
-            { textContent: 0 },
-            {
-                textContent: targetValue,
-                duration: 1.5,
-                ease: "power2.out",
-                snap: { textContent: 1 },
-                onUpdate: function() {
-                    element.textContent = Math.round(this.targets()[0].textContent);
-                }
-            }
-        );
-    } catch (error) {
-        console.warn('Animation error:', error);
-        element.textContent = targetValue;
-    }
-}
-
 // Update Specialists Display
 function updateSpecialistsDisplay(specialistsData) {
     const countElement = document.getElementById('specialistsTodayCount');
@@ -264,25 +68,24 @@ function updateSpecialistsDisplay(specialistsData) {
     
     if (previewElement) {
         const specialists = specialistsData.specialists || [];
-        let previewHTML = '';
         
+        let previewHTML = '';
         if (specialists.length > 0) {
             previewHTML = `
-                <div class="specialists-preview">
-                    <div class="shift-indicator">On-Call Today (24hrs)</div>
-                    <div class="specialists-list-mini">
-                        ${specialists.slice(0, 3).map(spec => `
-                            <span class="specialist-badge">
-                                <i class="fas fa-user-md"></i>
-                                ${spec.name.replace('Dr. ', '')}
-                            </span>
-                        `).join('')}
-                        ${specialists.length > 3 ? `<span class="more-badge">+${specialists.length - 3}</span>` : ''}
-                    </div>
+                <div class="shift-indicator">
+                    <i class="fas fa-phone-alt"></i> On-Call Today (24hrs)
+                </div>
+                <div class="specialists-list-mini">
+                    ${specialists.slice(0, 3).map(spec => `
+                        <span class="specialist-badge" title="${spec.department}">
+                            ${spec.name.replace('Dr. ', '')}
+                        </span>
+                    `).join('')}
+                    ${specialists.length > 3 ? `<span class="more-badge">+${specialists.length - 3}</span>` : ''}
                 </div>
             `;
         } else {
-            previewHTML = 'No specialists on call today';
+            previewHTML = '<span class="text-muted">No specialists on call today</span>';
         }
         
         previewElement.innerHTML = previewHTML;
@@ -301,42 +104,55 @@ function showSpecialistsDetails() {
     
     const modalContent = `
         <div class="specialists-details">
-            <h4>Specialists On-Call Today</h4>
-            <p class="text-muted mb-4">On-Call Period: ${data.onCallPeriod}</p>
+            <h4 class="mb-4">
+                <i class="fas fa-user-md me-2"></i>Specialists On-Call Today
+            </h4>
+            <p class="text-muted mb-4">
+                <i class="fas fa-clock"></i> On-Call Period: ${data.onCallPeriod}
+            </p>
             
-            ${departments.length > 0 ? departments.map(dept => {
-                const specialists = data.byDepartment[dept] || [];
-                const deptIcons = {
-                    'General Surgery': 'fa-procedures',
-                    'Pediatrics': 'fa-baby',
-                    'Internal Medicine': 'fa-stethoscope',
-                    'Ophthalmology': 'fa-eye',
-                    'ENT': 'fa-head-side-cough',
-                    'Anesthesia': 'fa-lungs',
-                    'Obstetrics & Gynaecology': 'fa-female',
-                    'Nephrology': 'fa-kidneys'
-                };
-                
-                return `
-                    <div class="department-section">
-                        <h5 class="department-title">
-                            <i class="fas ${deptIcons[dept] || 'fa-stethoscope'}"></i>
-                            ${dept}
-                        </h5>
-                        <div class="specialists-list">
-                            ${specialists.map(spec => `
-                                <div class="specialist-info">
-                                    <h6>${spec.name}</h6>
-                                    <div class="contact-info text-muted">${spec.phone}</div>
-                                </div>
-                            `).join('')}
+            <div class="departments-grid">
+                ${departments.length > 0 ? departments.map(dept => {
+                    const specialists = data.byDepartment[dept] || [];
+                    const deptIcons = {
+                        'General Surgery': 'fa-procedures',
+                        'Pediatrics': 'fa-baby',
+                        'Internal Medicine': 'fa-stethoscope',
+                        'Ophthalmology': 'fa-eye',
+                        'ENT': 'fa-head-side-cough',
+                        'Anesthesia': 'fa-lungs',
+                        'Obstetrics & Gynaecology': 'fa-female',
+                        'Nephrology': 'fa-kidneys'
+                    };
+                    
+                    return `
+                        <div class="department-section">
+                            <h5 class="department-title">
+                                <i class="fas ${deptIcons[dept] || 'fa-user-md'}"></i>
+                                ${dept}
+                            </h5>
+                            <div class="specialists-list">
+                                ${specialists.map(spec => `
+                                    <div class="specialist-card glass-effect">
+                                        <div class="specialist-info">
+                                            <h6>${spec.name}</h6>
+                                            <div class="contact-info">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-phone"></i> ${spec.phone}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                    </div>
-                `;
-            }).join('') : '<div class="text-center text-muted"><p>No specialists on call today</p></div>'}
+                    `;
+                }).join('') : '<p class="text-center text-muted">No specialists on call today</p>'}
+            </div>
             
-            <div class="summary-footer">
-                <strong>Total Specialists On-Call: ${data.totalOnCall}</strong><br>
+            <div class="summary-footer mt-4">
+                <strong>Total Specialists On-Call:</strong> ${data.totalOnCall}
+                <br>
                 <small class="text-muted">24-hour coverage from 8 AM to 8 AM next day</small>
             </div>
         </div>
@@ -356,8 +172,8 @@ function showModal(title, content) {
     // Create modal HTML
     const modalHTML = `
         <div class="modal fade" id="dynamicModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content glass-effect">
                     <div class="modal-header">
                         <h5 class="modal-title">${title}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -446,57 +262,48 @@ function setupAnimations() {
 
 // Page Entrance Animation
 function animatePageEntrance() {
-    // Check if GSAP is available
-    if (typeof gsap === 'undefined') {
-        console.warn('GSAP not loaded, skipping animations');
-        return;
-    }
-
-    try {
-        const timeline = gsap.timeline();
-
-        timeline
-            .from('.navbar-modern', {
-                y: -100,
-                opacity: 0,
-                duration: 0.8,
-                ease: 'power3.out'
-            })
-            .from('.sidebar-modern', {
-                x: -50,
-                opacity: 0,
-                duration: 0.6,
-                ease: 'power3.out'
-            }, '-=0.4')
-            .from('.dashboard-section', {
-                y: 30,
-                opacity: 0,
-                duration: 0.6,
-                stagger: 0.2,
-                ease: 'power3.out'
-            }, '-=0.4')
-            .from('.action-card', {
-                scale: 0.8,
-                opacity: 0,
-                duration: 0.4,
-                stagger: 0.1,
-                ease: 'back.out(1.7)',
-                onComplete: function() {
-                    document.querySelectorAll('.action-card').forEach(card => {
-                        card.style.opacity = '1';
-                        card.style.visibility = 'visible';
-                        card.style.transform = 'scale(1)';
-                    });
-                }
-            }, '-=0.2');
-    } catch (error) {
-        console.warn('Animation error:', error);
-    }
+    const timeline = gsap.timeline();
+    
+    timeline
+        .from('.navbar-modern', {
+            y: -100,
+            opacity: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        })
+        .from('.sidebar-modern', {
+            x: -50,
+            opacity: 0,
+            duration: 0.6,
+            ease: 'power3.out'
+        }, '-=0.4')
+        .from('.dashboard-section', {
+            y: 30,
+            opacity: 0,
+            duration: 0.6,
+            stagger: 0.2,
+            ease: 'power3.out'
+        }, '-=0.4')
+        .from('.action-card', {
+            scale: 0.8,
+            opacity: 0,
+            duration: 0.4,
+            stagger: 0.1,
+            ease: 'back.out(1.7)',
+            onComplete: function() {
+                document.querySelectorAll('.action-card').forEach(card => {
+                    card.style.opacity = '1';
+                    card.style.visibility = 'visible';
+                    card.style.transform = 'scale(1)';
+                });
+            }
+        }, '-=0.2');
 }
 
 // Set Light Mode
 function setLightMode() {
     const body = document.body;
+    
     console.log('Setting light mode');
     
     // Remove dark mode class
@@ -515,6 +322,7 @@ function setLightMode() {
 // Set Dark Mode
 function setDarkMode() {
     const body = document.body;
+    
     console.log('Setting dark mode');
     
     // Add dark mode class
@@ -534,7 +342,7 @@ function setDarkMode() {
 function updateThemeButtons(theme) {
     const lightBtn = document.getElementById('lightModeBtn');
     const darkBtn = document.getElementById('darkModeBtn');
-
+    
     if (theme === 'dark') {
         darkBtn?.classList.add('active');
         lightBtn?.classList.remove('active');
@@ -544,2397 +352,4656 @@ function updateThemeButtons(theme) {
     }
 }
 
-// Load Roster Data
-async function loadRosterData() {
-    const monthYear = document.getElementById('monthYear').value;
-    console.log('Loading roster for:', monthYear);
-
-    if (!monthYear) {
-        console.error('No month/year selected');
-        return;
+// Theme Toggle (kept for backward compatibility)
+function toggleTheme() {
+    const body = document.body;
+    const isDark = body.classList.contains('dark-mode');
+    
+    if (isDark) {
+        setLightMode();
+    } else {
+        setDarkMode();
     }
-
-    const [year, month] = monthYear.split('-');
-
-    try {
-        showGlobalLoader();
-
-        // Load roster data
-        console.log(`Fetching roster data for ${year}/${month}`);
-        const rosterResponse = await fetch(`/api/roster/${year}/${month}`);
-        const rosterData = await rosterResponse.json();
-        console.log('Roster response:', rosterData);
-
-        // Use existing doctors data if available, otherwise load it
-        if (!doctors || doctors.length === 0) {
-            const doctorsResponse = await fetch('/api/doctors');
-            const doctorsData = await doctorsResponse.json();
-            if (doctorsData.success) {
-                doctors = doctorsData.data;
+    
+    // Animate icon change with smooth rotation
+    if (themeIcon) {
+        gsap.to(themeIcon, {
+            rotationY: 180,
+            duration: 0.6,
+            ease: "power2.inOut",
+            onComplete: () => {
+                themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                gsap.set(themeIcon, { rotationY: 0 });
             }
-        }
-
-        if (rosterData.success) {
-            currentRoster = rosterData.data;
-
-            // Fix missing doctorName by resolving doctorId to doctorName
-            currentRoster = currentRoster.map(shift => {
-                if (!shift.doctorName && shift.doctorId && doctors.length > 0) {
-                    const doctor = doctors.find(d => d.id === shift.doctorId);
-                    if (doctor) {
-                        shift.doctorName = doctor.name;
-                    } else {
-                        // Fallback: create a generic name based on doctorId
-                        shift.doctorName = `Dr. Unknown ${shift.doctorId}`;
-                        console.warn('Doctor not found for ID:', shift.doctorId);
-                    }
-                } else if (!shift.doctorName) {
-                    // Last resort fallback
-                    shift.doctorName = 'Dr. Unknown';
-                }
-                return shift;
-            });
-
-            // Log successful name resolution
-            const resolvedNames = currentRoster.map(s => s.doctorName).filter(Boolean);
-            console.log('Resolved doctor names:', [...new Set(resolvedNames)]);
-
-            console.log('Loaded roster data:', currentRoster.length, 'shifts');
-            console.log('Fixed roster sample:', currentRoster[0]);
-
-            // Update stats
-            updateDashboardStats();
-
-            // Render calendar
-            renderCalendar(year, month);
-
-            // Double-check calendar was populated after a short delay
-            setTimeout(() => {
-                const calendarContainer = document.getElementById('calendarContainer');
-                if (calendarContainer && calendarContainer.children.length === 0) {
-                    console.warn('Calendar appears empty, retrying...');
-                    renderCalendar(year, month);
-                }
-            }, 500);
-
-            showToast('Roster loaded successfully', 'success');
-        } else {
-            console.error('Failed to load roster:', rosterData.message);
-            showToast('Failed to load roster data', 'error');
-        }
-    } catch (error) {
-        console.error('Error loading roster:', error);
-        showToast('Error loading roster data', 'error');
-    } finally {
-        hideGlobalLoader();
-    }
-}
-
-// Update Dashboard Stats
-function updateDashboardStats() {
-    if (!currentRoster || !doctors) return;
-
-    // Separate ER doctors from specialists
-    const erDoctorShifts = currentRoster.filter(r => !isSpecialist(r.doctorName));
-    const specialistShifts = currentRoster.filter(r => isSpecialist(r.doctorName));
-
-    // Get unique ER doctors and specialists
-    const uniqueERDoctors = [...new Set(erDoctorShifts.map(r => r.doctorName))];
-    const uniqueSpecialists = [...new Set(specialistShifts.map(r => r.doctorName))];
-
-    const activeERDoctors = uniqueERDoctors.length;
-    const totalShifts = currentRoster.length;
-    const erShifts = erDoctorShifts.length;
-    const specialistOnCallShifts = specialistShifts.length;
-    const referralDuties = currentRoster.filter(r => r.isReferralDuty).length;
-    const avgWorkload = activeERDoctors > 0 ? Math.round(erShifts / activeERDoctors) : 0;
-
-    // Update sidebar stats (ER doctors only)
-    document.getElementById('activeDoctorsCount').textContent = activeERDoctors;
-    document.getElementById('totalShiftsCount').textContent = erShifts;
-    document.getElementById('avgWorkloadCount').textContent = avgWorkload;
-
-    // Update main stats cards
-    document.getElementById('totalShiftsDisplay').textContent = totalShifts; // All shifts including specialists
-    document.getElementById('activeDoctorsDisplay').textContent = activeERDoctors; // ER doctors only
-    document.getElementById('referralDutiesDisplay').textContent = referralDuties;
-    document.getElementById('specialistsAvailableDisplay').textContent = uniqueSpecialists.length;
-
-    // Update roster info
-    const monthYear = document.getElementById('monthYear').value;
-    const [year, month] = monthYear.split('-');
-    const daysInMonth = new Date(year, month, 0).getDate();
-
-    document.getElementById('monthDays').textContent = daysInMonth;
-    document.getElementById('totalShiftsInfo').textContent = totalShifts;
-    document.getElementById('activeDoctorsInfo').textContent = activeERDoctors;
-
-    console.log(`Stats Updated: ${activeERDoctors} ER Doctors, ${uniqueSpecialists.length} Specialists, ${totalShifts} Total Shifts`);
-}
-
-// Render Calendar
-function renderCalendar(year, month) {
-    console.log(`Rendering calendar for ${year}/${month}`);
-    const calendarContainer = document.getElementById('calendarContainer');
-
-    if (!calendarContainer) {
-        console.error('Calendar container not found');
-        return;
-    }
-
-    console.log('Calendar container found:', calendarContainer);
-
-    if (!currentRoster || currentRoster.length === 0) {
-        console.log('No roster data available');
-        calendarContainer.innerHTML = '<div class="no-data-message">No roster data available. Click "Load Roster" to fetch data.</div>';
-        return;
-    }
-
-    console.log('Rendering calendar with roster data:', currentRoster.length, 'shifts');
-    console.log('Sample roster entry:', currentRoster[0]);
-    console.log('Sample roster entry keys:', Object.keys(currentRoster[0]));
-    console.log('Sample roster entry doctorName:', currentRoster[0].doctorName);
-    console.log('Sample roster entry date:', currentRoster[0].date);
-
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const firstDay = new Date(year, month - 1, 1).getDay();
-
-    console.log(`Days in month: ${daysInMonth}, Current roster entries: ${currentRoster.length}`);
-
-    // Debug: Show sample roster data
-    if (currentRoster.length > 0) {
-        console.log('Sample roster entries:', currentRoster.slice(0, 3).map(r => ({
-            doctor: r.doctorName,
-            date: r.date,
-            shift: r.shift,
-            dateOnly: r.date.split('T')[0]
-        })));
-    }
-
-    let calendarHTML = '';
-
-    // Create calendar days with proper UTC date handling
-    for (let day = 1; day <= daysInMonth; day++) {
-        // Use UTC to avoid timezone offset issues
-        const date = new Date(Date.UTC(year, month - 1, day));
-        const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
-        const isWeekend = date.getUTCDay() === 0 || date.getUTCDay() === 6;
-
-        // Debug date calculation for first few days
-        if (day <= 3) {
-            console.log(`Day ${day}: Date string: ${dateString}, Day name: ${dayName}, Weekend: ${isWeekend}`);
-        }
-
-        // Get shifts for this day - handle timezone offset
-        const dayShifts = currentRoster.filter(r => {
-            const shiftDate = new Date(r.date);
-            const shiftDateString = `${shiftDate.getFullYear()}-${String(shiftDate.getMonth() + 1).padStart(2, '0')}-${String(shiftDate.getDate()).padStart(2, '0')}`;
-            return shiftDateString === dateString;
         });
-
-        // Debug logging for first few days
-        if (day <= 3) {
-            console.log(`Day ${day} (${dateString}):`, {
-                totalShifts: dayShifts.length,
-                shifts: dayShifts.map(s => ({ doctor: s.doctorName, shift: s.shift })),
-                sampleRosterDates: currentRoster.slice(0, 5).map(r => r.date.split('T')[0])
-            });
-        }
-
-        // Separate ER doctors from specialists
-        const erShifts = dayShifts.filter(s => !isSpecialist(s.doctorName));
-        const specialistShifts = dayShifts.filter(s => isSpecialist(s.doctorName));
-
-        // Debug specialist filtering for first day
-        if (day === 1) {
-            console.log('Day 1 specialist filtering:');
-            console.log('All day shifts:', dayShifts.map(s => s.doctorName));
-            console.log('Specialists list:', specialists);
-            console.log('ER shifts after filtering:', erShifts.map(s => s.doctorName));
-            console.log('Specialist shifts after filtering:', specialistShifts.map(s => s.doctorName));
-        }
-
-        // Group ER shifts by type with validation
-        const morningShifts = erShifts.filter(s => s && s.shift === 'morning' && s.doctorName);
-        const eveningShifts = erShifts.filter(s => s && s.shift === 'evening' && s.doctorName);
-        const nightShifts = erShifts.filter(s => s && s.shift === 'night' && s.doctorName);
-
-        // Group specialist shifts by type with validation
-        const specialistMorning = specialistShifts.filter(s => s && s.shift === 'morning' && s.doctorName);
-        const specialistEvening = specialistShifts.filter(s => s && s.shift === 'evening' && s.doctorName);
-        const specialistNight = specialistShifts.filter(s => s && s.shift === 'night' && s.doctorName);
-
-        // Debug for first day
-        if (day === 1) {
-            console.log('Day 1 shifts:', dayShifts);
-            console.log('Day 1 ER shifts:', erShifts);
-            console.log('Day 1 morning shifts:', morningShifts);
-            if (morningShifts.length > 0) {
-                console.log('First morning shift structure:', morningShifts[0]);
-                console.log('First morning shift keys:', Object.keys(morningShifts[0]));
-            }
-        }
-
-        calendarHTML += `
-            <div class="calendar-day ${isWeekend ? 'weekend' : ''}" onclick="showDayDetails('${dateString}', ${day}, '${dayName}')">
-                <div class="day-header">
-                    <div>
-                        <div class="day-number">${day}</div>
-                        <div class="day-name">${dayName}</div>
-                    </div>
-                    ${isWeekend ? '<div class="weekend-indicator">Weekend</div>' : ''}
-                </div>
-
-                <div class="shifts-container">
-                    <!-- ER Doctor Shifts -->
-                    ${morningShifts.length > 0 ? `
-                        <div class="shift-section">
-                            <div class="shift-header">
-                                <i class="fas fa-sun"></i>
-                                <span>Morning</span>
-                                <div class="shift-count">${morningShifts.length}</div>
-                            </div>
-                            <div class="doctors-list">
-                                ${morningShifts.map(shift => renderDoctorAvatar(shift, 'morning')).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${eveningShifts.length > 0 ? `
-                        <div class="shift-section">
-                            <div class="shift-header">
-                                <i class="fas fa-cloud-sun"></i>
-                                <span>Evening</span>
-                                <div class="shift-count">${eveningShifts.length}</div>
-                            </div>
-                            <div class="doctors-list">
-                                ${eveningShifts.map(shift => renderDoctorAvatar(shift, 'evening')).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${nightShifts.length > 0 ? `
-                        <div class="shift-section">
-                            <div class="shift-header">
-                                <i class="fas fa-moon"></i>
-                                <span>Night</span>
-                                <div class="shift-count">${nightShifts.length}</div>
-                            </div>
-                            <div class="doctors-list">
-                                ${nightShifts.map(shift => renderDoctorAvatar(shift, 'night')).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <!-- Specialists On-Call Section -->
-                    ${specialistShifts.length > 0 ? `
-                        <div class="specialists-section">
-                            <div class="specialists-header">
-                                <i class="fas fa-user-md"></i>
-                                <span>Specialists On-Call</span>
-                                <div class="shift-count">${specialistShifts.length}</div>
-                            </div>
-                            <div class="specialists-list">
-                                ${specialistMorning.map(shift => renderDoctorAvatar(shift, 'morning')).join('')}
-                                ${specialistEvening.map(shift => renderDoctorAvatar(shift, 'evening')).join('')}
-                                ${specialistNight.map(shift => renderDoctorAvatar(shift, 'night')).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
     }
-
-    calendarContainer.innerHTML = calendarHTML;
-    console.log('Calendar HTML set, length:', calendarHTML.length);
-    console.log('First 500 chars of HTML:', calendarHTML.substring(0, 500));
+    
+    // Add a subtle scale animation to the toggle button
+    gsap.to('.theme-toggle', {
+        scale: 0.9,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+    });
+    
+    // Save preference
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    
+    // Show toast with theme-appropriate styling
+    showToast(`${isDark ? 'Dark' : 'Light'} mode activated`, 'info');
+    
+    // Remove transition after animation
+    setTimeout(() => {
+        body.style.transition = '';
+    }, 300);
+    
+    console.log(`Theme switched to: ${isDark ? 'dark' : 'light'} mode`);
+    console.log('Background color applied:', body.style.backgroundColor);
 }
 
-// Specialists list
-const specialists = ['Dr. Fathi', 'Dr. Joseph', 'Dr. Mahasen'];
-
-// Check if doctor is a specialist
-function isSpecialist(doctorName) {
-    return specialists.includes(doctorName);
-}
-
-// Render Doctor Avatar
-function renderDoctorAvatar(shift, shiftType) {
-    // Robust safety checks
-    if (!shift || typeof shift !== 'object') {
-        console.warn('Invalid shift object:', shift);
-        return '';
-    }
-
-    if (!shift.doctorName || typeof shift.doctorName !== 'string') {
-        console.warn('Invalid doctorName in shift:', shift);
-        return '';
-    }
-
-    try {
-        const doctor = doctors.find(d => d && d.name === shift.doctorName);
-        const doctorName = shift.doctorName;
-        const initials = doctorName.replace('Dr. ', '').split(' ').map(n => n[0]).join('');
-        const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f5a0', '#ffc947', '#ff6b6b', '#9d4edd'];
-        const colorIndex = (shift.doctorId || 0) % colors.length;
-        const shiftTime = getShiftTime(shiftType);
-        const doctorType = isSpecialist(doctorName) ? 'Specialist (On-Call)' : 'ER Doctor';
-        const doctorInfo = doctor ? `${doctorName}\n${doctorType}\n${doctor.specialization}\n${doctor.phone}` : `${doctorName}\n${doctorType}`;
-
-        // Different styling for specialists
-        const specialistClass = isSpecialist(doctorName) ? 'specialist-avatar' : '';
-        const specialistBadge = isSpecialist(doctorName) ? '<div class="specialist-badge" title="Specialist On-Call">S</div>' : '';
-
-        return `
-            <div class="doctor-avatar ${shiftType} ${specialistClass}"
-                 title="${doctorInfo}\nShift: ${shiftTime}${shift.isReferralDuty ? '\n🚨 Referral Duty' : ''}"
-                 onclick="event.stopPropagation(); showDoctorDetails('${doctorName}', '${shiftType}', ${shift.isReferralDuty || false})">
-                <div class="avatar-circle" style="background: ${colors[colorIndex]};">
-                    ${initials}
-                </div>
-                <div class="doctor-name">${doctorName.replace('Dr. ', '')}</div>
-                ${shift.isReferralDuty ? '<div class="referral-badge" title="Referral Duty">R</div>' : ''}
-                ${specialistBadge}
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error rendering doctor avatar:', error, shift);
-        return '';
+// Load saved theme
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const body = document.body;
+    
+    console.log('Loading theme:', savedTheme);
+    
+    // Remove any inline styles that might override CSS
+    body.style.backgroundColor = '';
+    body.style.color = '';
+    
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        updateThemeButtons('dark');
+        console.log('Dark theme loaded from localStorage');
+        console.log('Body classes:', body.className);
+    } else {
+        // Ensure light theme is set by default
+        body.classList.remove('dark-mode');
+        updateThemeButtons('light');
+        console.log('Light theme loaded (default)');
+        console.log('Body classes:', body.className);
     }
 }
 
-// Get Shift Time
-function getShiftTime(shiftType) {
-    switch(shiftType) {
-        case 'morning': return '7AM - 3PM';
-        case 'evening': return '3PM - 11PM';
-        case 'night': return '11PM - 7AM';
-        default: return '';
+// Modern Loading States
+function showGlobalLoader() {
+    const loader = document.createElement('div');
+    loader.className = 'global-loader';
+    loader.innerHTML = `
+        <div class="loader-modern">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+        </div>
+    `;
+    document.body.appendChild(loader);
+}
+
+function hideGlobalLoader() {
+    const loader = document.querySelector('.global-loader');
+    if (loader) {
+        gsap.to(loader, {
+            opacity: 0,
+            duration: 0.3,
+            onComplete: () => loader.remove()
+        });
     }
+}
+
+// Create Ripple Effect
+function createRipple(e) {
+    const button = e.currentTarget;
+    const ripple = document.createElement('span');
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+    
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.className = 'ripple';
+    
+    button.appendChild(ripple);
+    
+    setTimeout(() => ripple.remove(), 600);
 }
 
 // Set Default Month
 function setDefaultMonth() {
-    const monthInput = document.getElementById('monthYear');
-    if (monthInput) {
-        // Set to July 2025 where we have the latest data
-        monthInput.value = '2025-07';
-        console.log('Default month set to July 2025');
-    }
+    // Set to June 2025 as that's where the data is
+    const year = 2025;
+    const month = '06';
+    document.getElementById('monthYear').value = `${year}-${month}`;
+    // Update the current month display
+    const monthNames = ["January", "February", "March", "April", "May", "June", 
+                       "July", "August", "September", "October", "November", "December"];
+    document.getElementById('currentMonth').textContent = `${monthNames[5]} ${year}`;
+    loadRosterData();
 }
 
 // Load Doctors
 async function loadDoctors() {
     try {
         const response = await fetch('/api/doctors');
-        const data = await response.json();
-
-        if (data.success) {
-            doctors = data.data;
-            console.log('Doctors loaded:', doctors.length);
-        } else {
-            console.error('Failed to load doctors:', data.message);
+        const result = await response.json();
+        if (result.success) {
+            doctors = result.data;
+            populateDoctorSelect();
+            animateStatCounter('totalDoctors', doctors.length);
         }
     } catch (error) {
         console.error('Error loading doctors:', error);
+        showToast('Error loading doctors', 'danger');
     }
+}
+
+// Populate Doctor Select with Animation
+function populateDoctorSelect(doctorsList = null) {
+    const select = document.getElementById('rosterDoctor');
+    if (!select) return;
+    
+    const doctorsToShow = doctorsList || doctors;
+    select.innerHTML = '<option value="">Select a doctor...</option>';
+    
+    doctorsToShow.forEach((doctor, index) => {
+        const option = document.createElement('option');
+        option.value = doctor.id;
+        option.textContent = doctor.name;
+        if (doctor.specialization) {
+            option.textContent += ` (${doctor.specialization})`;
+        }
+        select.appendChild(option);
+    });
+}
+
+// Load Roster Data with Animation
+async function loadRosterData() {
+    const monthYear = document.getElementById('monthYear').value;
+    if (!monthYear) return;
+
+    const [year, month] = monthYear.split('-');
+    // Get the button properly - it might be called from different places
+    const loadBtn = document.querySelector('.modern-btn.primary-btn[onclick*="loadRosterData"]');
+    
+    if (loadBtn && loadBtn.classList) {
+        loadBtn.classList.add('loading');
+    }
+    
+    // Show skeleton loaders
+    showSkeletonLoaders();
+    
+    try {
+        await Promise.all([
+            loadAnalytics(year, month),
+            loadRoster(year, month)
+        ]);
+        
+        document.getElementById('currentMonth').textContent = 
+            new Date(year, month - 1).toLocaleDateString('en-US', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+        // Update quick stats
+        updateQuickStats();
+        
+    } catch (error) {
+        console.error('Error loading roster data:', error);
+        showToast('Error loading roster data', 'danger');
+    } finally {
+        if (loadBtn) {
+            loadBtn.classList.remove('loading');
+        }
+        hideSkeletonLoaders();
+    }
+}
+
+// Show Skeleton Loaders
+function showSkeletonLoaders() {
+    // Analytics skeleton
+    document.getElementById('analyticsContent').innerHTML = `
+        <div class="skeleton-grid">
+            ${[1,2,3,4].map(() => `
+                <div class="skeleton-card glass-effect">
+                    <div class="skeleton-icon"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text short"></div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    // Roster skeleton
+    document.getElementById('rosterContent').innerHTML = `
+        <div class="skeleton-table glass-effect">
+            ${[1,2,3,4,5].map(() => `
+                <div class="skeleton-row">
+                    <div class="skeleton-cell"></div>
+                    <div class="skeleton-cell"></div>
+                    <div class="skeleton-cell"></div>
+                    <div class="skeleton-cell"></div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function hideSkeletonLoaders() {
+    // Handled by render functions
+}
+
+// Load Analytics with Charts
+async function loadAnalytics(year, month) {
+    try {
+        const response = await fetch(`/api/roster/analytics/${year}/${month}`);
+        const result = await response.json();
+        if (result.success) {
+            currentAnalytics = result.data;
+            renderModernAnalytics();
+        }
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+    }
+}
+
+// Render Modern Analytics with Charts
+function renderModernAnalytics() {
+    const container = document.getElementById('analyticsContent');
+    
+    if (!currentAnalytics || Object.keys(currentAnalytics).length === 0) {
+        container.innerHTML = `
+            <div class="empty-state glass-effect">
+                <div class="empty-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3>No analytics data available</h3>
+                <p>Select a month with roster data to view analytics</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Create analytics cards with animations
+    container.innerHTML = `
+        <div class="stat-card glass-effect animate-in">
+            <div class="stat-header">
+                <div class="stat-icon primary-gradient">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Total Shifts</h3>
+            </div>
+            <div class="stat-body">
+                <div class="stat-number" data-value="${currentAnalytics.totalShifts || 0}">0</div>
+                <canvas id="shiftsChart" width="200" height="100"></canvas>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-effect animate-in">
+            <div class="stat-header">
+                <div class="stat-icon success-gradient">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h3>Active Doctors</h3>
+            </div>
+            <div class="stat-body">
+                <div class="stat-number" data-value="${currentAnalytics.activeDoctors || 0}">0</div>
+                <canvas id="doctorsChart" width="200" height="100"></canvas>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-effect animate-in">
+            <div class="stat-header">
+                <div class="stat-icon warning-gradient">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <h3>Referral Duties</h3>
+            </div>
+            <div class="stat-body">
+                <div class="stat-number" data-value="${currentAnalytics.referralDuties || 0}">0</div>
+                <div class="stat-percentage">${currentAnalytics.referralPercentage || 0}%</div>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-effect animate-in" id="specialistsToday" onclick="showSpecialistsDetails()" style="cursor: pointer;">
+            <div class="stat-header">
+                <div class="stat-icon info-gradient">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h3>Specialists Available Today</h3>
+            </div>
+            <div class="stat-body">
+                <div class="stat-number" id="specialistsTodayCount" data-value="0">0</div>
+                <div class="specialists-preview" id="specialistsPreview">
+                    <span class="loading-text">Loading...</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Animate numbers
+    document.querySelectorAll('.stat-number').forEach(el => {
+        animateStatCounter(el, parseInt(el.dataset.value));
+    });
+    
+    // Animate cards entrance
+    gsap.from('.stat-card', {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.1,
+        ease: 'power3.out'
+    });
+    
+    // Create mini charts
+    setTimeout(() => {
+        createMiniCharts();
+    }, 500);
+    
+    // Load specialists data after rendering analytics
+    loadSpecialistsToday();
+}
+
+// Animate Stat Counter
+function animateStatCounter(element, endValue) {
+    if (typeof element === 'string') {
+        element = document.getElementById(element);
+    }
+    if (!element) return;
+    
+    const duration = 1500;
+    const start = 0;
+    const increment = endValue / (duration / 16);
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= endValue) {
+            current = endValue;
+            clearInterval(timer);
+        }
+        element.textContent = Math.floor(current);
+    }, 16);
+}
+
+// Create Mini Charts
+function createMiniCharts() {
+    // Shifts distribution chart
+    const shiftsCtx = document.getElementById('shiftsChart');
+    if (shiftsCtx && currentAnalytics.shiftDistribution) {
+        charts.shifts = new Chart(shiftsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Morning', 'Evening', 'Night'],
+                datasets: [{
+                    data: [
+                        currentAnalytics.shiftDistribution.morning || 0,
+                        currentAnalytics.shiftDistribution.evening || 0,
+                        currentAnalytics.shiftDistribution.night || 0
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 193, 71, 0.8)',
+                        'rgba(79, 172, 254, 0.8)',
+                        'rgba(157, 78, 221, 0.8)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+    
+    // Doctors workload chart
+    const doctorsCtx = document.getElementById('doctorsChart');
+    if (doctorsCtx && currentAnalytics.doctorStats) {
+        const topDoctors = Object.entries(currentAnalytics.doctorStats)
+            .sort((a, b) => b[1].totalDuties - a[1].totalDuties)
+            .slice(0, 5);
+            
+        charts.doctors = new Chart(doctorsCtx, {
+            type: 'bar',
+            data: {
+                labels: topDoctors.map(([name]) => name.split(' ')[0]),
+                datasets: [{
+                    data: topDoctors.map(([, stats]) => stats.totalDuties),
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        display: false
+                    },
+                    x: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Load Roster
+async function loadRoster(year, month) {
+    try {
+        console.log(`Loading roster for ${year}/${month}`);
+        const response = await fetch(`/api/roster/${year}/${month}`);
+        const result = await response.json();
+        console.log('Roster API response:', result);
+        if (result.success) {
+            currentRoster = result.data;
+            console.log('Loaded roster entries:', currentRoster.length);
+            renderModernRoster();
+        }
+    } catch (error) {
+        console.error('Error loading roster:', error);
+    }
+}
+
+// Render Modern Roster
+function renderModernRoster() {
+    const container = document.getElementById('rosterContent');
+    
+    if (!container) {
+        console.error('Roster content container not found');
+        return;
+    }
+    
+    if (!currentRoster || currentRoster.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state glass-effect">
+                <div class="empty-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3>No roster entries found</h3>
+                <p>Add roster entries for this month to see them here</p>
+                <button class="modern-btn primary-btn" onclick="showAddRosterModal()">
+                    <i class="fas fa-plus me-2"></i>Add First Entry
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    // Store current scroll position
+    const scrollPos = window.scrollY;
+    
+    // Render immediately without clearing
+    if (currentView === 'table') {
+        renderRosterTable(currentRoster, container);
+    } else if (currentView === 'calendar') {
+        renderCalendarView(container);
+    } else if (currentView === 'timeline') {
+        renderTimelineView(container);
+    }
+    
+    // Restore scroll position
+    window.scrollTo(0, scrollPos);
+    
+    // Update stats
+    animateStatCounter('totalShifts', currentRoster.length);
+}
+
+// Render Roster Table - Modern Card Layout
+function renderRosterTable(roster, container) {
+    const groupedByDate = groupRosterByDate(roster);
+    const dates = Object.keys(groupedByDate).sort();
+    
+    let html = `
+        <div class="roster-cards-container">
+            <div class="roster-summary glass-effect mb-4">
+                <div class="summary-stats">
+                    <div class="summary-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>${dates.length} Days</span>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>${roster.length} Total Shifts</span>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-user-md"></i>
+                        <span>${[...new Set(roster.map(r => r.doctorId))].length} Active Doctors</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="roster-grid">
+    `;
+    
+    dates.forEach((date, dateIndex) => {
+        const entries = groupedByDate[date];
+        const dateObj = new Date(date);
+        const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+        const isToday = new Date().toDateString() === dateObj.toDateString();
+        
+        // Group by shift type for this date
+        const shiftGroups = {
+            morning: entries.filter(e => e.shift === 'morning'),
+            evening: entries.filter(e => e.shift === 'evening'),
+            night: entries.filter(e => e.shift === 'night')
+        };
+        
+        html += `
+            <div class="day-card glass-effect ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''}" 
+                 style="animation-delay: ${dateIndex * 0.05}s">
+                <div class="day-header">
+                    <div class="date-info">
+                        <div class="date-number">${dateObj.getDate()}</div>
+                        <div class="date-details">
+                            <div class="date-weekday">${dateObj.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                            <div class="date-month">${dateObj.toLocaleDateString('en-US', { month: 'short' })}</div>
+                        </div>
+                    </div>
+                    ${isToday ? '<span class="today-badge">Today</span>' : ''}
+                    ${isWeekend ? '<span class="weekend-badge">Weekend</span>' : ''}
+                </div>
+                
+                <div class="shifts-container">
+        `;
+        
+        // Render each shift type
+        ['morning', 'evening', 'night'].forEach(shiftType => {
+            const shiftEntries = shiftGroups[shiftType];
+            if (shiftEntries.length > 0) {
+                html += `
+                    <div class="shift-group">
+                        <div class="shift-header">
+                            <i class="fas fa-${getShiftIcon(shiftType)}"></i>
+                            <span class="shift-label">${shiftType}</span>
+                            <span class="shift-count">${shiftEntries.length}</span>
+                        </div>
+                        <div class="shift-doctors">
+                `;
+                
+                shiftEntries.forEach(entry => {
+                    const doctorInitials = entry.doctorName ? 
+                        entry.doctorName.replace('Dr. ', '').split(' ').map(n => n[0]).join('') : 'D';
+                    
+                    html += `
+                        <div class="doctor-chip ${entry.isReferralDuty ? 'referral' : ''}" 
+                             title="${entry.doctorName}${entry.isReferralDuty ? ' (Referral Duty)' : ''}">
+                            <div class="doctor-avatar-mini ${getRandomGradient()}">
+                                ${doctorInitials}
+                            </div>
+                            <span class="doctor-name-mini">${entry.doctorName ? entry.doctorName.replace('Dr. ', '') : 'Unknown'}</span>
+                            ${entry.isReferralDuty ? '<i class="fas fa-exchange-alt referral-icon"></i>' : ''}
+                            <button class="delete-mini" onclick="deleteRosterEntry(${entry._id || entry.id})" title="Delete">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        // Show empty state if no shifts
+        if (entries.length === 0) {
+            html += `
+                <div class="no-shifts">
+                    <i class="fas fa-calendar-times"></i>
+                    <span>No shifts scheduled</span>
+                </div>
+            `;
+        }
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    
+    // Add entrance animations with safeguard
+    const dayCards = document.querySelectorAll('.day-card');
+    if (dayCards.length > 0 && typeof gsap !== 'undefined') {
+        // Ensure cards are visible first
+        dayCards.forEach(card => {
+            card.style.opacity = '1';
+            card.style.transform = 'scale(1)';
+        });
+        
+        // Then animate
+        gsap.fromTo('.day-card', 
+            {
+                scale: 0.9,
+                opacity: 0
+            },
+            {
+                scale: 1,
+                opacity: 1,
+                duration: 0.4,
+                stagger: 0.03,
+                ease: 'power2.out',
+                clearProps: 'all' // Clear inline styles after animation
+            }
+        );
+    }
+}
+
+// Get random gradient for avatars
+function getRandomGradient() {
+    const gradients = [
+        'gradient-1', 'gradient-2', 'gradient-3', 'gradient-4', 
+        'gradient-5', 'gradient-6', 'gradient-7', 'gradient-8'
+    ];
+    return gradients[Math.floor(Math.random() * gradients.length)];
+}
+
+// Get Shift Icon
+function getShiftIcon(shift) {
+    const icons = {
+        morning: 'sun',
+        evening: 'cloud-sun',
+        night: 'moon'
+    };
+    return icons[shift] || 'clock';
+}
+
+// Group Roster by Date
+function groupRosterByDate(roster) {
+    return roster.reduce((groups, entry) => {
+        const date = entry.date.split('T')[0];
+        if (!groups[date]) {
+            groups[date] = [];
+        }
+        groups[date].push(entry);
+        return groups;
+    }, {});
+}
+
+// Set Roster View - Make globally accessible
+window.setRosterView = function(view) {
+    console.log('[setRosterView] Called with view:', view);
+    
+    if (!view) {
+        console.error('[setRosterView] No view provided');
+        return false;
+    }
+    
+    currentView = view;
+    console.log('[setRosterView] Current view set to:', currentView);
+    
+    // Update toggle buttons
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-view') === view) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Re-render roster
+    if (currentRoster && currentRoster.length > 0) {
+        console.log('[setRosterView] Rendering roster with', currentRoster.length, 'entries');
+        try {
+            renderModernRoster();
+        } catch (error) {
+            console.error('[setRosterView] Error rendering roster:', error);
+        }
+    } else {
+        console.warn('[setRosterView] No roster data available');
+    }
+    
+    showToast(`Switched to ${view} view`, 'info');
+    return false; // Prevent any default behavior
 }
 
 // Update Quick Stats
 function updateQuickStats() {
-    // This function can be enhanced later
-    console.log('Quick stats updated');
+    if (currentAnalytics) {
+        animateStatCounter('totalDoctors', doctors.length);
+        animateStatCounter('totalShifts', currentAnalytics.totalShifts || 0);
+        animateStatCounter('avgWorkload', Math.round(currentAnalytics.averageWorkload || 0));
+    }
 }
 
-// Utility Functions
-function showGlobalLoader() {
-    console.log('Loading...');
+// Show Modern Modals
+function showAddDoctorModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addDoctorModal'));
+    modal.show();
+    
+    // Animate modal entrance
+    gsap.from('.modal-content', {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power3.out'
+    });
 }
 
-function hideGlobalLoader() {
-    console.log('Loading complete');
+function showAddRosterModal() {
+    populateDoctorSelect();
+    const modal = new bootstrap.Modal(document.getElementById('addRosterModal'));
+    modal.show();
+    
+    // Set default date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('rosterDate').value = today;
+    
+    // Animate modal entrance
+    gsap.from('.modal-content', {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power3.out'
+    });
 }
 
-function showToast(message, type) {
-    console.log(`${type.toUpperCase()}: ${message}`);
+// Add Doctor with Animation
+async function addDoctor() {
+    const form = document.getElementById('addDoctorForm');
+    if (!form.reportValidity()) return;
+    
+    const button = event.target;
+    button.classList.add('loading');
+    
+    const doctorData = {
+        name: document.getElementById('doctorName').value,
+        email: document.getElementById('doctorEmail').value,
+        phone: document.getElementById('doctorPhone').value,
+        specialization: document.getElementById('doctorSpecialization').value
+    };
+    
+    try {
+        const response = await fetch('/api/doctors', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(doctorData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Doctor added successfully!', 'success');
+            form.reset();
+            bootstrap.Modal.getInstance(document.getElementById('addDoctorModal')).hide();
+            await loadDoctors();
+        } else {
+            showToast(result.message || 'Error adding doctor', 'danger');
+        }
+    } catch (error) {
+        console.error('Error adding doctor:', error);
+        showToast('Error adding doctor', 'danger');
+    } finally {
+        button.classList.remove('loading');
+    }
+}
 
-    // Create a simple toast notification
+// Add Roster Entry with Animation
+async function addRosterEntry() {
+    const form = document.getElementById('addRosterForm');
+    if (!form.reportValidity()) return;
+    
+    const button = event.target;
+    button.classList.add('loading');
+    
+    const selectedDoctor = doctors.find(d => d.id === parseInt(document.getElementById('rosterDoctor').value));
+    if (!selectedDoctor) {
+        showToast('Please select a doctor', 'warning');
+        button.classList.remove('loading');
+        return;
+    }
+    
+    const entryData = {
+        doctorId: selectedDoctor.id,
+        doctorName: selectedDoctor.name,
+        shift: document.getElementById('rosterShift').value,
+        date: document.getElementById('rosterDate').value,
+        isReferralDuty: document.getElementById('isReferralDuty').checked
+    };
+    
+    try {
+        const response = await fetch('/api/roster', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(entryData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Roster entry added successfully!', 'success');
+            form.reset();
+            bootstrap.Modal.getInstance(document.getElementById('addRosterModal')).hide();
+            await loadRosterData();
+        } else {
+            showToast(result.message || 'Error adding roster entry', 'danger');
+        }
+    } catch (error) {
+        console.error('Error adding roster entry:', error);
+        showToast('Error adding roster entry', 'danger');
+    } finally {
+        button.classList.remove('loading');
+    }
+}
+
+// Delete Roster Entry with Confirmation
+async function deleteRosterEntry(id) {
+    if (!confirm('Are you sure you want to delete this roster entry?')) return;
+    
+    try {
+        const response = await fetch(`/api/roster/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Roster entry deleted successfully!', 'success');
+            
+            // Animate row removal
+            const row = event.target.closest('tr');
+            gsap.to(row, {
+                opacity: 0,
+                x: -50,
+                duration: 0.3,
+                onComplete: () => {
+                    loadRosterData();
+                }
+            });
+        } else {
+            showToast(result.message || 'Error deleting roster entry', 'danger');
+        }
+    } catch (error) {
+        console.error('Error deleting roster entry:', error);
+        showToast('Error deleting roster entry', 'danger');
+    }
+}
+
+// Modern Toast Notifications
+function showToast(message, type = 'info') {
     const toast = document.createElement('div');
-    toast.className = `toast-notification ${type}`;
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 1.5rem;
-        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-        color: white;
-        border-radius: 8px;
-        z-index: 10000;
-        font-weight: 500;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
+    toast.className = `toast glass-effect ${type}`;
+    
+    const icons = {
+        success: 'check-circle',
+        danger: 'exclamation-circle',
+        warning: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+    
+    toast.innerHTML = `
+        <i class="fas fa-${icons[type]} me-2"></i>
+        <span>${message}</span>
     `;
-
-    document.body.appendChild(toast);
-
-    // Animate in
+    
+    document.getElementById('toastContainer').appendChild(toast);
+    
+    // Animate entrance
+    gsap.from(toast, {
+        x: 100,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power3.out'
+    });
+    
+    // Auto remove after 3 seconds
     setTimeout(() => {
-        toast.style.transform = 'translateX(0)';
-    }, 100);
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300);
+        gsap.to(toast, {
+            x: 100,
+            opacity: 0,
+            duration: 0.3,
+            onComplete: () => toast.remove()
+        });
     }, 3000);
 }
 
-// Load Theme
-function loadTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    if (savedTheme === 'dark') {
-        setDarkMode();
-    } else {
-        setLightMode();
-    }
-}
-
-// Toggle Theme
-function toggleTheme() {
-    const isDark = document.body.classList.contains('dark-mode');
-    if (isDark) {
-        setLightMode();
-    } else {
-        setDarkMode();
-    }
-}
-
-// Quick Action Functions
-async function showConsults() {
-    try {
-        const modal = document.getElementById('consultationModal');
-        const modalBody = document.getElementById('consultationModalBody');
-
-        // Show modal with loading state
-        modalBody.innerHTML = `
-            <div class="modal-loading">
-                <div class="loading-spinner"></div>
-                Loading consultations...
-            </div>
-        `;
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('show'), 10);
-
-        // Fetch data
-        const consultationsResponse = await fetch('/api/consultations');
-        const consultations = await consultationsResponse.json();
-
-        // Use the global doctors variable that's already loaded
-        const doctorsData = doctors; // Use the global doctors variable
-        console.log('Doctors data for consultations:', doctorsData);
-        console.log('Is doctors array?', Array.isArray(doctorsData));
-
-        // Store globally for tab switching
-        globalConsultations = consultations;
-        globalDoctors = doctorsData;
-
-        // Render consultation interface
-        renderConsultationModal(consultations, doctorsData);
-
-    } catch (error) {
-        console.error('Error loading consultations:', error);
-        showToast('Failed to load consultations', 'error');
-        closeConsultationModal();
-    }
-}
-
-async function showReferrals() {
-    try {
-        const modal = document.getElementById('referralModal');
-        const modalBody = document.getElementById('referralModalBody');
-
-        // Show modal with loading state
-        modalBody.innerHTML = `
-            <div class="modal-loading">
-                <div class="loading-spinner"></div>
-                Loading referrals...
-            </div>
-        `;
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('show'), 10);
-
-        // Fetch data
-        const referralsResponse = await fetch('/api/referrals');
-        const referrals = await referralsResponse.json();
-
-        // Use the global doctors variable that's already loaded
-        const doctorsData = doctors; // Use the global doctors variable
-
-        // Store globally for tab switching
-        globalReferrals = referrals;
-        globalDoctors = doctorsData;
-
-        // Render referral interface
-        renderReferralModal(referrals, doctorsData);
-
-    } catch (error) {
-        console.error('Error loading referrals:', error);
-        showToast('Failed to load referrals', 'error');
-        closeReferralModal();
-    }
-}
-
-async function showConsultationLog() {
-    try {
-        const modal = document.getElementById('consultationLogModal');
-        const modalBody = document.getElementById('consultationLogModalBody');
-
-        // Show modal with loading state
-        modalBody.innerHTML = `
-            <div class="modal-loading">
-                <div class="loading-spinner"></div>
-                Loading consultation logs...
-            </div>
-        `;
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('show'), 10);
-
-        // Fetch data
-        const [logsResponse, doctorsResponse] = await Promise.all([
-            fetch('/api/consultation-logs'),
-            fetch('/api/doctors')
-        ]);
-
-        const logs = await logsResponse.json();
-        const doctorsData = await doctorsResponse.json();
-
-        // Store globally for operations
-        globalConsultationLogs = logs;
-        globalDoctors = doctorsData.success ? doctorsData.data : doctorsData;
-
-        // Render consultation log interface
-        renderConsultationLogModal(logs, globalDoctors);
-
-    } catch (error) {
-        console.error('Error loading consultation logs:', error);
-        showToast('Failed to load consultation logs', 'error');
-        closeConsultationLogModal();
-    }
-}
-
-function showLogReferral() {
-    // This will open the referrals modal and automatically show the new referral form
-    showReferrals().then(() => {
-        // Auto-open the new referral form
-        setTimeout(() => {
-            const addBtn = document.querySelector('.add-referral-btn');
-            if (addBtn) addBtn.click();
-        }, 500);
-    });
-}
-
-async function showSaudiCrescent() {
-    try {
-        const modal = document.getElementById('saudiCrescentModal');
-        const modalBody = document.getElementById('saudiCrescentModalBody');
-
-        // Show modal with loading state
-        modalBody.innerHTML = `
-            <div class="modal-loading">
-                <div class="loading-spinner"></div>
-                Loading Saudi Red Crescent records...
-            </div>
-        `;
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('show'), 10);
-
-        // Fetch data
-        const [recordsResponse, doctorsResponse, unitsResponse] = await Promise.all([
-            fetch('/api/saudi-crescent'),
-            fetch('/api/doctors'),
-            fetch('/api/saudi-crescent/units/list')
-        ]);
-
-        const records = await recordsResponse.json();
-        const doctorsData = await doctorsResponse.json();
-        const ambulanceUnits = await unitsResponse.json();
-
-        // Store globally for operations
-        globalSaudiCrescentRecords = records;
-        globalDoctors = doctorsData.success ? doctorsData.data : doctorsData;
-        globalAmbulanceUnits = ambulanceUnits;
-
-        // Render Saudi Red Crescent interface
-        renderSaudiCrescentModal(records, globalDoctors, ambulanceUnits);
-
-    } catch (error) {
-        console.error('Error loading Saudi Red Crescent records:', error);
-        showToast('Failed to load Saudi Red Crescent records', 'error');
-        closeSaudiCrescentModal();
-    }
-}
-
-// License Center, Data Importer, and Export Hub functions are now defined in their respective modules
-// openLicenseCenter() - defined in licenseCenter.js
-// openDataImporter() - defined in dataImporter.js
-// openExportHub() - defined in exportHub.js
-
-// Global Search
-function handleGlobalSearch(event) {
-    const query = event.target.value.toLowerCase();
-    console.log('Searching for:', query);
-}
-
 // Command Palette
-function openCommandPalette() {
-    console.log('Opening command palette...');
-}
-
-// Ripple Effect
-function createRipple(event) {
-    const button = event.currentTarget;
-    const ripple = document.createElement('span');
-    const rect = button.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
-    const x = event.clientX - rect.left - size / 2;
-    const y = event.clientY - rect.top - size / 2;
-
-    ripple.style.width = ripple.style.height = size + 'px';
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    ripple.classList.add('ripple');
-
-    button.appendChild(ripple);
-
-    setTimeout(() => {
-        ripple.remove();
-    }, 600);
-}
-
-// Show Day Details
-function showDayDetails(dateString, dayNumber, dayName) {
-    const dayShifts = currentRoster.filter(r =>
-        r.date.split('T')[0] === dateString
-    );
-
-    if (dayShifts.length === 0) {
-        showToast('No shifts scheduled for this day', 'info');
-        return;
-    }
-
-    // Group shifts by type
-    const morningShifts = dayShifts.filter(s => s.shift === 'morning');
-    const eveningShifts = dayShifts.filter(s => s.shift === 'evening');
-    const nightShifts = dayShifts.filter(s => s.shift === 'night');
-
-    const modalContent = `
-        <div class="day-details">
-            <h4>📅 ${dayName}, ${dayNumber}</h4>
-            <p class="text-muted mb-4">${new Date(dateString).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            })}</p>
-
-            ${morningShifts.length > 0 ? `
-                <div class="shift-details-section">
-                    <h5 class="shift-title">
-                        <i class="fas fa-sun text-success"></i>
-                        Morning Shift (7AM - 3PM)
-                        <span class="badge bg-success ms-2">${morningShifts.length}</span>
-                    </h5>
-                    <div class="doctors-detail-list">
-                        ${morningShifts.map(shift => renderDoctorDetailCard(shift)).join('')}
-                    </div>
-                </div>
-            ` : ''}
-
-            ${eveningShifts.length > 0 ? `
-                <div class="shift-details-section">
-                    <h5 class="shift-title">
-                        <i class="fas fa-cloud-sun text-warning"></i>
-                        Evening Shift (3PM - 11PM)
-                        <span class="badge bg-warning ms-2">${eveningShifts.length}</span>
-                    </h5>
-                    <div class="doctors-detail-list">
-                        ${eveningShifts.map(shift => renderDoctorDetailCard(shift)).join('')}
-                    </div>
-                </div>
-            ` : ''}
-
-            ${nightShifts.length > 0 ? `
-                <div class="shift-details-section">
-                    <h5 class="shift-title">
-                        <i class="fas fa-moon text-info"></i>
-                        Night Shift (11PM - 7AM)
-                        <span class="badge bg-info ms-2">${nightShifts.length}</span>
-                    </h5>
-                    <div class="doctors-detail-list">
-                        ${nightShifts.map(shift => renderDoctorDetailCard(shift)).join('')}
-                    </div>
-                </div>
-            ` : ''}
-
-            <div class="summary-footer">
-                <strong>Total Staff: ${dayShifts.length}</strong><br>
-                <small class="text-muted">
-                    Referral Duties: ${dayShifts.filter(s => s.isReferralDuty).length}
-                </small>
-            </div>
-        </div>
-    `;
-
-    showModal(`Day Schedule - ${dayName} ${dayNumber}`, modalContent);
-}
-
-// Render Doctor Detail Card
-function renderDoctorDetailCard(shift) {
-    const doctor = doctors.find(d => d.name === shift.doctorName);
-    const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f5a0', '#ffc947', '#ff6b6b', '#9d4edd'];
-    const colorIndex = shift.doctorId % colors.length;
-    const initials = shift.doctorName.replace('Dr. ', '').split(' ').map(n => n[0]).join('');
-
-    return `
-        <div class="doctor-detail-card">
-            <div class="doctor-avatar-large">
-                <div class="avatar-circle-large" style="background: ${colors[colorIndex]};">
-                    ${initials}
-                </div>
-            </div>
-            <div class="doctor-info-detailed">
-                <h6 class="doctor-name-full">${shift.doctorName}</h6>
-                <div class="doctor-specialization">${doctor ? doctor.specialization : 'Emergency Medicine'}</div>
-                <div class="doctor-contact">${doctor ? doctor.phone : 'Contact not available'}</div>
-                ${shift.isReferralDuty ? '<div class="referral-duty-badge">🚨 Referral Duty</div>' : ''}
-            </div>
-        </div>
-    `;
-}
-
-// Show Doctor Details
-function showDoctorDetails(doctorName, shiftType, isReferralDuty) {
-    const doctor = doctors.find(d => d.name === doctorName);
-    const shiftTime = getShiftTime(shiftType);
-
-    const modalContent = `
-        <div class="doctor-profile">
-            <div class="doctor-header">
-                <div class="doctor-avatar-profile">
-                    <div class="avatar-circle-profile">
-                        ${doctorName.replace('Dr. ', '').split(' ').map(n => n[0]).join('')}
-                    </div>
-                </div>
-                <div class="doctor-info-profile">
-                    <h4>${doctorName}</h4>
-                    <p class="specialization">${doctor ? doctor.specialization : 'Emergency Medicine'}</p>
-                    <p class="contact-info">📞 ${doctor ? doctor.phone : 'Contact not available'}</p>
-                </div>
-            </div>
-
-            <div class="current-shift-info">
-                <h5>Current Shift Information</h5>
-                <div class="shift-badge ${shiftType}">
-                    <i class="fas fa-${shiftType === 'morning' ? 'sun' : shiftType === 'evening' ? 'cloud-sun' : 'moon'}"></i>
-                    ${shiftType.charAt(0).toUpperCase() + shiftType.slice(1)} Shift (${shiftTime})
-                </div>
-                ${isReferralDuty ? '<div class="referral-duty-alert">🚨 Currently on Referral Duty</div>' : ''}
-            </div>
-
-            ${doctor ? `
-                <div class="doctor-details">
-                    <h5>Contact Information</h5>
-                    <div class="contact-grid">
-                        <div class="contact-item">
-                            <strong>Email:</strong> ${doctor.email}
-                        </div>
-                        <div class="contact-item">
-                            <strong>Phone:</strong> ${doctor.phone}
-                        </div>
-                        <div class="contact-item">
-                            <strong>Status:</strong>
-                            <span class="status-badge ${doctor.isAvailable ? 'available' : 'unavailable'}">
-                                ${doctor.isAvailable ? '✅ Available' : '❌ Unavailable'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            ` : ''}
-        </div>
-    `;
-
-    showModal(`Doctor Profile - ${doctorName}`, modalContent);
-}
-
-// Keyboard Shortcuts
 function setupKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
-        // Cmd/Ctrl + K for search
+    document.addEventListener('keydown', (e) => {
+        // Cmd/Ctrl + K for command palette
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
-            document.getElementById('globalSearch').focus();
+            openCommandPalette();
         }
-
-        // Cmd/Ctrl + D for dark mode toggle
-        if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
-            e.preventDefault();
-            toggleTheme();
-        }
-
-        // Escape key to close modals
+        
+        // ESC to close command palette
         if (e.key === 'Escape') {
-            closeConsultationModal();
-            closeReferralModal();
-            closeConsultationLogModal();
-            closeSaudiCrescentModal();
+            closeCommandPalette();
         }
     });
 }
 
-// Modal Management Functions
-function closeConsultationModal() {
-    const modal = document.getElementById('consultationModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-    }, 300);
+function openCommandPalette() {
+    const palette = document.getElementById('commandPalette');
+    palette.classList.add('active');
+    document.getElementById('commandInput').focus();
+    
+    // Load commands
+    loadCommands();
 }
 
-function closeReferralModal() {
-    const modal = document.getElementById('referralModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-    }, 300);
+function closeCommandPalette() {
+    const palette = document.getElementById('commandPalette');
+    palette.classList.remove('active');
+    document.getElementById('commandInput').value = '';
 }
 
-function closeConsultationLogModal() {
-    const modal = document.getElementById('consultationLogModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-    }, 300);
-}
-
-function closeSaudiCrescentModal() {
-    const modal = document.getElementById('saudiCrescentModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-    }, 300);
-}
-
-// Click outside modal to close
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('modal-overlay')) {
-        closeConsultationModal();
-        closeReferralModal();
-        closeConsultationLogModal();
-        closeSaudiCrescentModal();
-    }
-});
-
-// Consultation Modal Rendering
-function renderConsultationModal(consultations, doctors) {
-    const modalBody = document.getElementById('consultationModalBody');
-
-    const activeConsultations = consultations.filter(c => ['pending', 'accepted'].includes(c.status));
-    const completedConsultations = consultations.filter(c => c.status === 'completed');
-
-    modalBody.innerHTML = `
-        <div class="consultation-tabs">
-            <button class="tab-btn active" onclick="switchConsultationTab('active')">
-                <i class="fas fa-clock"></i>
-                Active (${activeConsultations.length})
-            </button>
-            <button class="tab-btn" onclick="switchConsultationTab('completed')">
-                <i class="fas fa-check-circle"></i>
-                Completed (${completedConsultations.length})
-            </button>
-            <button class="tab-btn" onclick="switchConsultationTab('all')">
-                <i class="fas fa-list"></i>
-                All (${consultations.length})
-            </button>
-        </div>
-
-        <div class="consultation-actions">
-            <button class="add-consultation-btn" onclick="showNewConsultationForm()">
-                <i class="fas fa-plus"></i>
-                New Consultation
-            </button>
-        </div>
-
-        <div id="newConsultationForm" class="new-consultation-form glass-card" style="display: none;">
-            ${renderNewConsultationForm(doctors)}
-        </div>
-
-        <div id="consultationsList" class="consultations-list">
-            ${renderConsultationsList(activeConsultations, doctors)}
-        </div>
-    `;
-}
-
-// Referral Modal Rendering
-function renderReferralModal(referrals, doctors) {
-    const modalBody = document.getElementById('referralModalBody');
-
-    const activeReferrals = referrals.filter(r => ['pending', 'in-transit'].includes(r.status));
-    const completedReferrals = referrals.filter(r => r.status === 'completed');
-    const stats = calculateReferralStats(referrals, doctors);
-
-    modalBody.innerHTML = `
-        <div class="referral-tabs">
-            <button class="tab-btn active" onclick="switchReferralTab('statistics')">
-                <i class="fas fa-chart-bar"></i>
-                Statistics
-            </button>
-            <button class="tab-btn" onclick="switchReferralTab('active')">
-                <i class="fas fa-clock"></i>
-                Active (${activeReferrals.length})
-            </button>
-            <button class="tab-btn" onclick="switchReferralTab('completed')">
-                <i class="fas fa-check-circle"></i>
-                Completed (${completedReferrals.length})
-            </button>
-            <button class="tab-btn" onclick="switchReferralTab('all')">
-                <i class="fas fa-list"></i>
-                All (${referrals.length})
-            </button>
-        </div>
-
-        <div id="referralContent">
-            ${renderReferralStatistics(stats)}
-        </div>
-    `;
-}
-
-// Store data globally for tab switching
-let globalConsultations = [];
-let globalReferrals = [];
-let globalDoctors = [];
-let globalConsultationLogs = [];
-let globalSaudiCrescentRecords = [];
-let globalAmbulanceUnits = [];
-
-// Helper Functions
-function getERDoctorName(doctorId) {
-    if (!globalDoctors || !Array.isArray(globalDoctors)) {
-        return 'Unknown Doctor';
-    }
-    const doctor = globalDoctors.find(d => d.id === doctorId);
-    return doctor ? doctor.name : 'Unknown Doctor';
-}
-
-function formatTime(timeString) {
-    return new Date(timeString).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-function renderNewConsultationForm(doctors) {
-    // All doctors in the system are ER doctors (Emergency Medicine specialization)
-    const erDoctors = doctors || [];
-    const specialties = ['Cardiology', 'Neurology', 'Orthopedics', 'Surgery', 'Psychiatry', 'Radiology', 'Pathology', 'Anesthesiology', 'Dermatology', 'Ophthalmology'];
-
-    return `
-        <h3>Request New Consultation</h3>
-        <form onsubmit="submitNewConsultation(event)">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Patient ID</label>
-                    <input type="text" name="patientId" placeholder="Enter patient ID" required>
-                </div>
-                <div class="form-group">
-                    <label>ER Doctor</label>
-                    <select name="erDoctorId" required>
-                        <option value="">Select ER Doctor</option>
-                        ${erDoctors.map(doctor => `<option value="${doctor.id}">${doctor.name}</option>`).join('')}
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Specialty</label>
-                    <select name="specialty" required>
-                        <option value="">Select Specialty</option>
-                        ${specialties.map(specialty => `<option value="${specialty}">${specialty}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Urgency</label>
-                    <select name="urgency">
-                        <option value="routine">Routine</option>
-                        <option value="urgent">Urgent</option>
-                        <option value="emergency">Emergency</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Clinical Notes</label>
-                <textarea name="notes" placeholder="Enter clinical details and reason for consultation" rows="3"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i>
-                    Send Consultation Request
-                </button>
-                <button type="button" class="cancel-btn" onclick="hideNewConsultationForm()">
-                    Cancel
-                </button>
-            </div>
-        </form>
-    `;
-}
-
-function renderConsultationsList(consultations, doctors) {
-    if (consultations.length === 0) {
-        return '<div class="empty-state">No consultations found</div>';
-    }
-
-    return consultations.map(consultation => `
-        <div class="consultation-item glass-card">
-            <div class="consultation-header">
-                <div class="consultation-info">
-                    <div class="patient-id">Patient: ${consultation.patientId}</div>
-                    <div class="specialty-badge" style="background-color: ${getStatusColor(consultation.status)}">
-                        ${consultation.specialty}
-                    </div>
-                    <div class="urgency-badge urgency-${consultation.urgency}">
-                        ${consultation.urgency.toUpperCase()}
-                    </div>
-                </div>
-                <div class="consultation-status">
-                    <span class="status-badge status-${consultation.status}">
-                        ${consultation.status.toUpperCase()}
-                    </span>
-                </div>
-            </div>
-            <div class="consultation-details">
-                <div class="detail-row">
-                    <span class="label">ER Doctor:</span>
-                    <span class="value">${getERDoctorName(consultation.erDoctorId)}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Requested:</span>
-                    <span class="value">${formatTime(consultation.requestTime)}</span>
-                </div>
-                ${consultation.responseTime ? `
-                    <div class="detail-row">
-                        <span class="label">Response:</span>
-                        <span class="value">${formatTime(consultation.responseTime)}</span>
-                    </div>
-                ` : ''}
-                ${consultation.notes ? `
-                    <div class="detail-row">
-                        <span class="label">Notes:</span>
-                        <span class="value">${consultation.notes}</span>
-                    </div>
-                ` : ''}
-            </div>
-            ${renderConsultationActions(consultation)}
+function loadCommands() {
+    const commands = [
+        { icon: 'user-plus', label: 'Add Doctor', action: showAddDoctorModal },
+        { icon: 'calendar-plus', label: 'Add Roster Entry', action: showAddRosterModal },
+        { icon: 'chart-line', label: 'Show Workload Analysis', action: showWorkloadAnalysis },
+        { icon: 'balance-scale', label: 'Show Fairness Metrics', action: showFairnessMetrics },
+        { icon: 'moon', label: 'Toggle Dark Mode', action: toggleTheme },
+        { icon: 'download', label: 'Export Data', action: showExportMenu }
+    ];
+    
+    const container = document.getElementById('commandResults');
+    container.innerHTML = commands.map(cmd => `
+        <div class="command-item" onclick="${cmd.action.name}(); closeCommandPalette();">
+            <i class="fas fa-${cmd.icon}"></i>
+            <span>${cmd.label}</span>
         </div>
     `).join('');
 }
 
-function renderConsultationActions(consultation) {
-    if (consultation.status === 'pending') {
-        return `
-            <div class="consultation-actions">
-                <button class="action-btn accept-btn" onclick="updateConsultationStatus(${consultation.id}, 'accepted')">
-                    <i class="fas fa-check"></i>
-                    Accept
-                </button>
-                <button class="action-btn decline-btn" onclick="updateConsultationStatus(${consultation.id}, 'declined')">
-                    <i class="fas fa-times"></i>
-                    Decline
-                </button>
-            </div>
-        `;
-    } else if (consultation.status === 'accepted') {
-        return `
-            <div class="consultation-actions">
-                <button class="action-btn complete-btn" onclick="updateConsultationStatus(${consultation.id}, 'completed')">
-                    <i class="fas fa-check-circle"></i>
-                    Mark Complete
+// Handle Global Search
+function handleGlobalSearch(e) {
+    const query = e.target.value.toLowerCase().trim();
+    console.log('Searching for:', query, 'Current roster length:', currentRoster ? currentRoster.length : 0);
+    
+    if (!query) {
+        // If search is empty, show all data
+        if (currentRoster && currentRoster.length > 0) {
+            renderModernRoster();
+        }
+        // Remove any search highlights
+        document.querySelectorAll('.search-highlight').forEach(el => {
+            el.classList.remove('search-highlight');
+        });
+        return;
+    }
+    
+    // Check if data is loaded
+    if (!currentRoster || currentRoster.length === 0) {
+        showToast('Please wait for roster data to load or click "Load Roster"', 'warning');
+        return;
+    }
+    
+    // Search in roster data
+    const filteredRoster = currentRoster.filter(entry => {
+        return (
+            (entry.doctorName && entry.doctorName.toLowerCase().includes(query)) ||
+            (entry.shift && entry.shift.toLowerCase().includes(query)) ||
+            (entry.date && entry.date.includes(query)) ||
+            (entry.isReferralDuty && 'referral'.includes(query))
+        );
+    });
+    
+    console.log('Filtered results:', filteredRoster.length);
+    
+    // Render filtered results
+    if (filteredRoster.length > 0) {
+        renderRosterTable(filteredRoster, document.getElementById('rosterContent'));
+        highlightSearchTerms(query);
+        showToast(`Found ${filteredRoster.length} result${filteredRoster.length > 1 ? 's' : ''} for "${query}"`, 'info');
+    } else {
+        document.getElementById('rosterContent').innerHTML = `
+            <div class="empty-state glass-effect">
+                <div class="empty-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>No results found for "${query}"</h3>
+                <p>Try searching for doctor names, shifts, or dates</p>
+                <button class="modern-btn secondary-btn" onclick="document.getElementById('globalSearch').value=''; handleGlobalSearch({target: {value: ''}})">
+                    <i class="fas fa-times me-2"></i>Clear Search
                 </button>
             </div>
         `;
     }
-    return '';
-}
-
-function getStatusColor(status) {
-    const colors = {
-        pending: '#f59e0b',
-        accepted: '#3b82f6',
-        completed: '#10b981',
-        declined: '#ef4444'
-    };
-    return colors[status] || '#6b7280';
-}
-
-// Referral Helper Functions
-function calculateReferralStats(referrals, doctors) {
-    const total = referrals.length;
-    const emergency = referrals.filter(r => r.referralType === 'emergency').length;
-    const lifeSaving = referrals.filter(r => r.referralType === 'life-saving').length;
-
-    const doctorBreakdown = {};
-    referrals.forEach(referral => {
-        const doctorName = getERDoctorName(referral.erDoctorId);
-        if (!doctorBreakdown[doctorName]) {
-            doctorBreakdown[doctorName] = { total: 0, emergency: 0, lifeSaving: 0 };
+    
+    // Search in doctors list for dropdowns
+    if (doctors.length > 0) {
+        const filteredDoctors = doctors.filter(doctor => 
+            doctor.name.toLowerCase().includes(query) ||
+            (doctor.specialization && doctor.specialization.toLowerCase().includes(query))
+        );
+        
+        // Update any open doctor dropdowns
+        const doctorSelect = document.getElementById('rosterDoctor');
+        if (doctorSelect && doctorSelect.offsetParent !== null) {
+            populateDoctorSelect(filteredDoctors);
         }
-        doctorBreakdown[doctorName].total++;
-        if (referral.referralType === 'emergency') doctorBreakdown[doctorName].emergency++;
-        if (referral.referralType === 'life-saving') doctorBreakdown[doctorName].lifeSaving++;
-    });
-
-    return { total, emergency, lifeSaving, doctorBreakdown };
+    }
 }
 
-function renderReferralStatistics(stats) {
-    return `
-        <div class="referral-statistics">
-            <div class="stats-grid">
-                <div class="stat-card emergency-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
+// Highlight search terms in results
+function highlightSearchTerms(query) {
+    setTimeout(() => {
+        const elements = document.querySelectorAll('.roster-table td');
+        elements.forEach(el => {
+            const text = el.textContent;
+            if (text.toLowerCase().includes(query)) {
+                el.classList.add('search-highlight');
+            }
+        });
+    }, 100);
+}
+
+// Workload Analysis
+async function showWorkloadAnalysis() {
+    const section = document.getElementById('workloadSection');
+    section.style.display = 'block';
+    
+    gsap.from(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power3.out'
+    });
+    
+    const monthYear = document.getElementById('monthYear').value;
+    if (!monthYear) {
+        showToast('Please select a month first', 'warning');
+        return;
+    }
+    
+    const [year, month] = monthYear.split('-');
+    
+    try {
+        const response = await fetch(`/api/workload/${year}/${month}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderWorkloadAnalysis(result.data);
+        }
+    } catch (error) {
+        console.error('Error loading workload analysis:', error);
+        showToast('Error loading workload analysis', 'danger');
+    }
+}
+
+function hideWorkloadAnalysis() {
+    const section = document.getElementById('workloadSection');
+    gsap.to(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.3,
+        onComplete: () => {
+            section.style.display = 'none';
+        }
+    });
+}
+
+// Fairness Metrics
+async function showFairnessMetrics() {
+    const section = document.getElementById('fairnessSection');
+    section.style.display = 'block';
+    
+    gsap.from(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power3.out'
+    });
+    
+    const monthYear = document.getElementById('monthYear').value;
+    if (!monthYear) {
+        showToast('Please select a month first', 'warning');
+        return;
+    }
+    
+    const [year, month] = monthYear.split('-');
+    
+    try {
+        const response = await fetch(`/api/fairness/${year}/${month}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderFairnessMetrics(result.data);
+        }
+    } catch (error) {
+        console.error('Error loading fairness metrics:', error);
+        showToast('Error loading fairness metrics', 'danger');
+    }
+}
+
+function hideFairnessMetrics() {
+    const section = document.getElementById('fairnessSection');
+    gsap.to(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.3,
+        onComplete: () => {
+            section.style.display = 'none';
+        }
+    });
+}
+
+// Show Export Menu
+function showExportMenu() {
+    // Create a modern export modal
+    const modal = document.createElement('div');
+    modal.className = 'export-modal-overlay';
+    modal.innerHTML = `
+        <div class="export-modal glass-effect">
+            <div class="export-modal-header">
+                <h3><i class="fas fa-download me-2"></i>Export Data</h3>
+                <button class="close-btn" onclick="closeExportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="export-modal-body">
+                <div class="export-options">
+                    <div class="export-option" onclick="exportRoster('csv'); closeExportModal();">
+                        <div class="export-icon csv">
+                            <i class="fas fa-file-csv"></i>
+                        </div>
+                        <div class="export-info">
+                            <h4>Roster Data (CSV)</h4>
+                            <p>Export monthly roster schedule</p>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-number">${stats.emergency}</div>
-                        <div class="stat-label">Emergency Referrals</div>
+                    <div class="export-option" onclick="exportRoster('pdf'); closeExportModal();">
+                        <div class="export-icon pdf">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="export-info">
+                            <h4>Roster Data (PDF)</h4>
+                            <p>Export monthly roster schedule</p>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-card life-saving-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-heartbeat"></i>
+                    <div class="export-option" onclick="exportAnalytics('csv'); closeExportModal();">
+                        <div class="export-icon csv">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="export-info">
+                            <h4>Analytics (CSV)</h4>
+                            <p>Export duty analytics and statistics</p>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-number">${stats.lifeSaving}</div>
-                        <div class="stat-label">Life-Saving Referrals</div>
+                    <div class="export-option" onclick="exportAnalytics('pdf'); closeExportModal();">
+                        <div class="export-icon pdf">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="export-info">
+                            <h4>Analytics (PDF)</h4>
+                            <p>Export duty analytics and statistics</p>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-card total-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-clipboard-list"></i>
+                    <div class="export-option" onclick="exportWorkload('csv'); closeExportModal();">
+                        <div class="export-icon csv">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <div class="export-info">
+                            <h4>Workload Analysis (CSV)</h4>
+                            <p>Export workload distribution data</p>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-number">${stats.total}</div>
-                        <div class="stat-label">Total Referrals</div>
+                    <div class="export-option" onclick="exportWorkload('pdf'); closeExportModal();">
+                        <div class="export-icon pdf">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <div class="export-info">
+                            <h4>Workload Analysis (PDF)</h4>
+                            <p>Export workload distribution report</p>
+                        </div>
+                    </div>
+                    <div class="export-option" onclick="exportFairness('csv'); closeExportModal();">
+                        <div class="export-icon csv">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="export-info">
+                            <h4>Fairness Metrics (CSV)</h4>
+                            <p>Export equity and fairness data</p>
+                        </div>
+                    </div>
+                    <div class="export-option" onclick="exportFairness('pdf'); closeExportModal();">
+                        <div class="export-icon pdf">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="export-info">
+                            <h4>Fairness Metrics (PDF)</h4>
+                            <p>Export equity and fairness report</p>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Animate entrance
+    gsap.from('.export-modal', {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power3.out'
+    });
+}
 
-            <div class="doctor-breakdown glass-card">
-                <h3>Doctor-wise Referral Breakdown</h3>
-                <div class="breakdown-table">
-                    <div class="table-header">
-                        <div>Doctor</div>
-                        <div>Total Referrals</div>
-                        <div>Emergency</div>
-                        <div>Life-Saving</div>
-                        <div>Emergency %</div>
-                        <div>Life-Saving %</div>
+function closeExportModal() {
+    const modal = document.querySelector('.export-modal-overlay');
+    if (modal) {
+        gsap.to('.export-modal', {
+            scale: 0.9,
+            opacity: 0,
+            duration: 0.2,
+            onComplete: () => modal.remove()
+        });
+    }
+}
+
+// Consultation Log
+function showConsultationLog() {
+    const section = document.getElementById('consultationSection');
+    section.style.display = 'block';
+    
+    gsap.from(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power3.out'
+    });
+    
+    initializeConsultationForm();
+}
+
+function hideConsultationLog() {
+    const section = document.getElementById('consultationSection');
+    gsap.to(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.3,
+        onComplete: () => {
+            section.style.display = 'none';
+        }
+    });
+}
+
+// Referral Statistics Functions
+async function showReferralStats() {
+    const section = document.getElementById('referralSection');
+    section.style.display = 'block';
+    
+    gsap.from(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power3.out'
+    });
+    
+    await initializeReferralStats();
+}
+
+function hideReferralStats() {
+    const section = document.getElementById('referralSection');
+    gsap.to(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.3,
+        onComplete: () => {
+            section.style.display = 'none';
+        }
+    });
+}
+
+// Show referral entry form
+function showReferralEntry() {
+    const referralEntrySection = document.getElementById('referralEntrySection');
+    referralEntrySection.style.display = 'block';
+    
+    const content = document.getElementById('referralEntryContent');
+    content.innerHTML = `
+        <div class="referral-entry-form">
+            <form id="referralEntryForm" class="glass-effect p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="referralDoctor" class="form-label">Doctor</label>
+                        <select class="form-select" id="referralDoctor" required>
+                            <option value="">Select Doctor</option>
+                            ${doctors.map(doc => `
+                                <option value="${doc.id}">${doc.name}</option>
+                            `).join('')}
+                        </select>
                     </div>
-                    ${Object.entries(stats.doctorBreakdown).map(([doctorName, data]) => {
-                        const emergencyPercent = data.total > 0 ? Math.round((data.emergency / data.total) * 100) : 0;
-                        const lifeSavingPercent = data.total > 0 ? Math.round((data.lifeSaving / data.total) * 100) : 0;
+                    <div class="col-md-6">
+                        <label for="referralDate" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="referralDate" value="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                </div>
+                
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <label for="referralType" class="form-label">Type</label>
+                        <select class="form-select" id="referralType" required>
+                            <option value="">Select Type</option>
+                            <option value="emergency">Emergency</option>
+                            <option value="life-saving">Life-Saving</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="patientName" class="form-label">Patient Name</label>
+                        <input type="text" class="form-control" id="patientName" placeholder="Enter patient name" required>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <label for="referralDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="referralDescription" rows="3" placeholder="Describe the reason for referral"></textarea>
+                </div>
+                
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Referral
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearReferralForm()">
+                        <i class="fas fa-redo me-2"></i>Clear
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-4">
+                <h5 class="mb-3">Recent Referrals</h5>
+                <div id="recentReferrals" class="table-responsive">
+                    <!-- Recent referrals will be loaded here -->
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Load recent referrals
+    loadRecentReferrals();
+    
+    // Setup form submission
+    document.getElementById('referralEntryForm').addEventListener('submit', handleReferralSubmit);
+    
+    // Animate section appearance
+    gsap.fromTo(referralEntrySection, 
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
+    );
+}
 
-                        return `
-                            <div class="table-row">
-                                <div class="doctor-name">${doctorName}</div>
-                                <div class="total-referrals">${data.total}</div>
-                                <div class="emergency-count">${data.emergency}</div>
-                                <div class="life-saving-count">${data.lifeSaving}</div>
-                                <div class="emergency-percent">${emergencyPercent}%</div>
-                                <div class="life-saving-percent">${lifeSavingPercent}%</div>
+// Hide referral entry form
+function hideReferralEntry() {
+    const section = document.getElementById('referralEntrySection');
+    gsap.to(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: () => {
+            section.style.display = 'none';
+        }
+    });
+}
+
+// Handle referral form submission
+async function handleReferralSubmit(e) {
+    e.preventDefault();
+    
+    const formData = {
+        doctorId: parseInt(document.getElementById('referralDoctor').value),
+        type: document.getElementById('referralType').value,
+        patientName: document.getElementById('patientName').value,
+        description: document.getElementById('referralDescription').value,
+        date: document.getElementById('referralDate').value
+    };
+    
+    try {
+        const response = await fetch('/api/referrals', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Referral logged successfully', 'success');
+            clearReferralForm();
+            loadRecentReferrals();
+            // Update referral statistics if visible
+            if (document.getElementById('referralSection').style.display !== 'none') {
+                showReferralStats();
+            }
+        } else {
+            showToast(result.message || 'Error logging referral', 'danger');
+        }
+    } catch (error) {
+        console.error('Error submitting referral:', error);
+        showToast('Error logging referral', 'danger');
+    }
+}
+
+// Clear referral form
+function clearReferralForm() {
+    document.getElementById('referralEntryForm').reset();
+    document.getElementById('referralDate').value = new Date().toISOString().split('T')[0];
+}
+
+// Format date for display
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+// Load recent referrals
+async function loadRecentReferrals() {
+    try {
+        // Get current month/year from the month selector or use default
+        const monthYear = document.getElementById('monthYear')?.value || '2025-06';
+        const [year, month] = monthYear.split('-');
+        
+        const response = await fetch(`/api/referrals/month/${year}/${month}`);
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+            // Sort by date descending and take last 5
+            const recentReferrals = result.data
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5);
+            
+            const tableHtml = `
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                            <th>Patient</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recentReferrals.map(ref => `
+                            <tr>
+                                <td>${formatDate(ref.date)}</td>
+                                <td>${ref.doctorName}</td>
+                                <td>${ref.patientName}</td>
+                                <td><span class="badge ${ref.type === 'emergency' ? 'bg-warning' : 'bg-danger'}">${ref.type}</span></td>
+                                <td>${ref.description || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('recentReferrals').innerHTML = tableHtml;
+        } else {
+            document.getElementById('recentReferrals').innerHTML = 
+                '<p class="text-muted">No referrals recorded for this month</p>';
+        }
+    } catch (error) {
+        console.error('Error loading recent referrals:', error);
+        document.getElementById('recentReferrals').innerHTML = 
+            '<p class="text-danger">Error loading recent referrals</p>';
+    }
+}
+
+async function initializeReferralStats() {
+    const content = document.getElementById('referralContent');
+    
+    // Calculate referral statistics from roster data
+    const referralStats = await calculateReferralStatistics();
+    
+    content.innerHTML = `
+        <div class="referral-stats-container">
+            <!-- Summary Cards -->
+            <div class="referral-summary-grid">
+                <div class="stat-card glass-effect">
+                    <div class="stat-icon emergency-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h4>${referralStats.emergency}</h4>
+                        <p>Emergency Referrals</p>
+                    </div>
+                </div>
+                <div class="stat-card glass-effect">
+                    <div class="stat-icon life-saving-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h4>${referralStats.lifeSaving}</h4>
+                        <p>Life-Saving Referrals</p>
+                    </div>
+                </div>
+                <div class="stat-card glass-effect">
+                    <div class="stat-icon total-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h4>${referralStats.total}</h4>
+                        <p>Total Referrals</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Doctor-wise Breakdown -->
+            <div class="doctor-referral-stats glass-effect mt-4">
+                <h4 class="section-subtitle mb-3">
+                    <i class="fas fa-user-md me-2"></i>Doctor-wise Referral Breakdown
+                </h4>
+                <div class="table-responsive">
+                    <table class="table referral-table">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Total Referrals</th>
+                                <th>Emergency</th>
+                                <th>Life-Saving</th>
+                                <th>Emergency %</th>
+                                <th>Life-Saving %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${referralStats.doctorBreakdown.map(doc => `
+                                <tr>
+                                    <td>${doc.name}</td>
+                                    <td>${doc.total}</td>
+                                    <td>${doc.emergency}</td>
+                                    <td>${doc.lifeSaving}</td>
+                                    <td><span class="badge bg-warning">${doc.emergencyPercentage}%</span></td>
+                                    <td><span class="badge bg-danger">${doc.lifeSavingPercentage}%</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="referral-charts-grid mt-4">
+                <div class="chart-container glass-effect">
+                    <h5>Referral Type Distribution</h5>
+                    <canvas id="referralTypeChart"></canvas>
+                </div>
+                <div class="chart-container glass-effect">
+                    <h5>Monthly Trend</h5>
+                    <canvas id="referralTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Create charts
+    setTimeout(() => createReferralCharts(referralStats), 100);
+}
+
+// Calculate referral statistics
+async function calculateReferralStatistics() {
+    try {
+        // Get current month/year from the month selector or use default
+        const monthYear = document.getElementById('monthYear')?.value || '2025-06';
+        const [year, month] = monthYear.split('-');
+        
+        const response = await fetch(`/api/referrals/stats/${year}/${month}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            return result.data;
+        } else {
+            // Return default stats if API fails
+            return {
+                total: 0,
+                emergency: 0,
+                lifeSaving: 0,
+                doctorBreakdown: []
+            };
+        }
+    } catch (error) {
+        console.error('Error fetching referral statistics:', error);
+        // Return default stats if API fails
+        return {
+            total: 0,
+            emergency: 0,
+            lifeSaving: 0,
+            doctorBreakdown: []
+        };
+    }
+}
+
+// Create referral charts
+function createReferralCharts(stats) {
+    // Pie chart for referral types
+    const typeCtx = document.getElementById('referralTypeChart');
+    if (typeCtx) {
+        new Chart(typeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Emergency', 'Life-Saving'],
+                datasets: [{
+                    data: [stats.emergency, stats.lifeSaving],
+                    backgroundColor: ['#ffc107', '#dc3545'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            padding: 10
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Line chart for trend (sample data)
+    const trendCtx = document.getElementById('referralTrendChart');
+    if (trendCtx) {
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Urgent',
+                    data: [5, 7, 8, 8],
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Life-Saving',
+                    data: [3, 4, 5, 5],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Saudi Crescent Functions
+function showSaudiCrescent() {
+    const section = document.getElementById('saudiCrescentSection');
+    section.style.display = 'block';
+    
+    gsap.from(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power3.out'
+    });
+    
+    initializeSaudiCrescent();
+}
+
+function hideSaudiCrescent() {
+    const section = document.getElementById('saudiCrescentSection');
+    gsap.to(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.3,
+        onComplete: () => {
+            section.style.display = 'none';
+        }
+    });
+}
+
+// License Management Functions
+async function showLicenseManager() {
+    const section = document.getElementById('licenseSection');
+    section.style.display = 'block';
+    
+    gsap.from(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power3.out'
+    });
+    
+    await initializeLicenseManager();
+}
+
+function hideLicenseManager() {
+    const section = document.getElementById('licenseSection');
+    gsap.to(section, {
+        y: 30,
+        opacity: 0,
+        duration: 0.3,
+        onComplete: () => {
+            section.style.display = 'none';
+        }
+    });
+}
+
+async function initializeLicenseManager() {
+    const content = document.getElementById('licenseContent');
+    
+    // Load license status
+    const statusResponse = await fetch('/api/licenses/status');
+    const statusResult = await statusResponse.json();
+    const status = statusResult.success ? statusResult.data : null;
+    
+    content.innerHTML = `
+        <div class="license-manager-container">
+            <!-- License Status Overview -->
+            <div class="license-status-overview mb-4">
+                <h4 class="mb-3"><i class="fas fa-chart-pie me-2"></i>License Status Overview</h4>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="stat-card glass-effect">
+                            <div class="stat-icon primary-gradient">
+                                <i class="fas fa-certificate"></i>
                             </div>
-                        `;
+                            <div class="stat-details">
+                                <h4>${status ? status.total : 0}</h4>
+                                <p>Total Licenses</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card glass-effect">
+                            <div class="stat-icon success-gradient">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h4>${status ? status.active : 0}</h4>
+                                <p>Active</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card glass-effect">
+                            <div class="stat-icon warning-gradient">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h4>${status ? status.expiringSoon : 0}</h4>
+                                <p>Expiring Soon</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card glass-effect">
+                            <div class="stat-icon danger-gradient">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h4>${status ? status.expired : 0}</h4>
+                                <p>Expired</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add License Button -->
+            <div class="mb-4">
+                <button class="btn btn-primary" onclick="showAddLicenseModal()">
+                    <i class="fas fa-plus me-2"></i>Add New License
+                </button>
+                <button class="btn btn-warning ms-2" onclick="checkLicenseExpiry()">
+                    <i class="fas fa-bell me-2"></i>Check Expiry Alerts
+                </button>
+            </div>
+            
+            <!-- License Alerts -->
+            ${status && status.doctorSummary.length > 0 ? `
+                <div class="license-alerts mb-4">
+                    <h4 class="mb-3"><i class="fas fa-bell me-2"></i>License Alerts</h4>
+                    <div class="alerts-container">
+                        ${status.doctorSummary.map(doc => `
+                            <div class="alert ${doc.expiredLicenses.length > 0 ? 'alert-danger' : 'alert-warning'} alert-dismissible fade show" role="alert">
+                                <strong>Dr. ${doc.doctorName}</strong>
+                                ${doc.expiredLicenses.length > 0 ? `
+                                    <span class="badge bg-danger ms-2">${doc.expiredLicenses.length} Expired</span>
+                                ` : ''}
+                                ${doc.expiringLicenses.length > 0 ? `
+                                    <span class="badge bg-warning ms-2">${doc.expiringLicenses.length} Expiring Soon</span>
+                                ` : ''}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <!-- License List -->
+            <div class="license-list">
+                <h4 class="mb-3"><i class="fas fa-list me-2"></i>All Licenses</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="licenseTable">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Type</th>
+                                <th>License Number</th>
+                                <th>Issue Date</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th>Days Until Expiry</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Licenses will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Load all licenses
+    await loadAllLicenses();
+}
+
+async function loadAllLicenses() {
+    try {
+        const response = await fetch('/api/licenses');
+        const result = await response.json();
+        
+        if (result.success) {
+            const tbody = document.querySelector('#licenseTable tbody');
+            const License = { getDaysUntilExpiry: (date) => {
+                const now = new Date();
+                const expiry = new Date(date);
+                const diff = expiry - now;
+                return Math.ceil(diff / (1000 * 60 * 60 * 24));
+            }};
+            
+            tbody.innerHTML = result.data.map(license => {
+                const doctor = doctors.find(d => d.id === license.doctorId);
+                const daysUntilExpiry = License.getDaysUntilExpiry(license.expiryDate);
+                const statusClass = license.status === 'expired' ? 'danger' : 
+                                  license.status === 'expiring_soon' ? 'warning' : 'success';
+                const statusText = license.status === 'expired' ? 'Expired' : 
+                                 license.status === 'expiring_soon' ? 'Expiring Soon' : 'Active';
+                
+                return `
+                    <tr>
+                        <td>${doctor ? doctor.name : 'Unknown'}</td>
+                        <td><span class="badge bg-primary">${license.type}</span></td>
+                        <td>${license.licenseNumber}</td>
+                        <td>${formatDate(license.issueDate)}</td>
+                        <td>${formatDate(license.expiryDate)}</td>
+                        <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                        <td>
+                            ${daysUntilExpiry > 0 ? 
+                                `<span class="text-${statusClass}">${daysUntilExpiry} days</span>` : 
+                                `<span class="text-danger">${Math.abs(daysUntilExpiry)} days ago</span>`
+                            }
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick="editLicense(${license.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteLicense(${license.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    } catch (error) {
+        console.error('Error loading licenses:', error);
+        showToast('Error loading licenses', 'danger');
+    }
+}
+
+function showAddLicenseModal() {
+    const modalHtml = `
+        <div class="modal fade" id="addLicenseModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New License/Certificate</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addLicenseForm">
+                            <div class="mb-3">
+                                <label for="licenseDoctor" class="form-label">Doctor</label>
+                                <select class="form-select" id="licenseDoctor" required>
+                                    <option value="">Select Doctor</option>
+                                    ${doctors.map(doc => `
+                                        <option value="${doc.id}">${doc.name}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="licenseType" class="form-label">License Type</label>
+                                <select class="form-select" id="licenseType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="SCFHS">SCFHS License</option>
+                                    <option value="BLS">BLS Certificate</option>
+                                    <option value="ACLS">ACLS Certificate</option>
+                                    <option value="PALS">PALS Certificate</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="licenseNumber" class="form-label">License/Certificate Number</label>
+                                <input type="text" class="form-control" id="licenseNumber" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="issueDate" class="form-label">Issue Date</label>
+                                        <input type="date" class="form-control" id="issueDate" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="expiryDate" class="form-label">Expiry Date</label>
+                                        <input type="date" class="form-control" id="expiryDate" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="saveLicense()">Save License</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('addLicenseModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addLicenseModal'));
+    modal.show();
+}
+
+async function saveLicense() {
+    const form = document.getElementById('addLicenseForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const licenseData = {
+        doctorId: parseInt(document.getElementById('licenseDoctor').value),
+        type: document.getElementById('licenseType').value,
+        licenseNumber: document.getElementById('licenseNumber').value,
+        issueDate: document.getElementById('issueDate').value,
+        expiryDate: document.getElementById('expiryDate').value
+    };
+    
+    try {
+        const response = await fetch('/api/licenses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(licenseData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('License added successfully', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('addLicenseModal')).hide();
+            await loadAllLicenses();
+            await initializeLicenseManager(); // Refresh the whole view
+        } else {
+            showToast(result.message || 'Error adding license', 'danger');
+        }
+    } catch (error) {
+        console.error('Error saving license:', error);
+        showToast('Error saving license', 'danger');
+    }
+}
+
+async function deleteLicense(licenseId) {
+    if (!confirm('Are you sure you want to delete this license?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/licenses/${licenseId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('License deleted successfully', 'success');
+            await loadAllLicenses();
+            await initializeLicenseManager(); // Refresh the whole view
+        } else {
+            showToast(result.message || 'Error deleting license', 'danger');
+        }
+    } catch (error) {
+        console.error('Error deleting license:', error);
+        showToast('Error deleting license', 'danger');
+    }
+}
+
+async function checkLicenseExpiry() {
+    try {
+        const response = await fetch('/api/licenses/check-expiry');
+        const result = await response.json();
+        
+        if (result.success) {
+            const data = result.data;
+            
+            if (data.notifications.length === 0) {
+                showToast('No license expiry alerts at this time', 'info');
+                return;
+            }
+            
+            // Show a modal with all notifications
+            const modalHtml = `
+                <div class="modal fade" id="expiryAlertsModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning text-dark">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-bell me-2"></i>License Expiry Alerts
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <strong>Summary:</strong> ${data.expiredCount} expired, ${data.expiringCount} expiring soon
+                                </div>
+                                
+                                <div class="notifications-list">
+                                    ${data.notifications.map(notif => `
+                                        <div class="alert alert-${notif.priority === 'critical' ? 'danger' : notif.priority === 'high' ? 'warning' : 'info'} mb-3">
+                                            <h6 class="alert-heading">
+                                                <i class="fas fa-user-md me-2"></i>${notif.doctor.name}
+                                            </h6>
+                                            <p class="mb-1">
+                                                <strong>${notif.license.type}</strong> - License #${notif.license.licenseNumber}
+                                            </p>
+                                            <p class="mb-0">${notif.message}</p>
+                                            <small class="text-muted">
+                                                Expires: ${formatDate(notif.license.expiryDate)}
+                                            </small>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Email notifications have been sent to the affected doctors.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('expiryAlertsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('expiryAlertsModal'));
+            modal.show();
+        }
+    } catch (error) {
+        console.error('Error checking license expiry:', error);
+        showToast('Error checking license expiry', 'danger');
+    }
+}
+
+function initializeSaudiCrescent() {
+    const content = document.getElementById('saudiCrescentContent');
+    content.innerHTML = `
+        <!-- Action Buttons -->
+        <div class="saudi-actions mb-3">
+            <button class="btn btn-success btn-sm" onclick="addSaudiCrescentRow()">
+                <i class="fas fa-plus me-2"></i>Add Entry
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="saveSaudiCrescentLog()">
+                <i class="fas fa-save me-2"></i>Save
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="clearSaudiCrescentForm()">
+                <i class="fas fa-eraser me-2"></i>Clear Form
+            </button>
+            <div class="btn-group ms-2" role="group">
+                <button type="button" class="btn btn-sm btn-info" onclick="exportSaudiCrescent('csv')" title="Export to CSV">
+                    <i class="fas fa-file-csv me-1"></i>CSV
+                </button>
+                <button type="button" class="btn btn-sm btn-info" onclick="exportSaudiCrescent('pdf')" title="Export to PDF">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+            </div>
+        </div>
+        
+        <!-- Saudi Crescent Table -->
+        <div class="table-responsive">
+            <table class="table saudi-crescent-table" id="saudiCrescentTable">
+                <thead class="table-success sticky-header">
+                    <tr>
+                        <th>Date</th>
+                        <th>Time Received</th>
+                        <th>Case Type</th>
+                        <th>Patient Details</th>
+                        <th>Receiving Doctor</th>
+                        <th>Handover Time</th>
+                        <th>Duration (min)</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="saudiCrescentTableBody">
+                    <!-- Rows will be generated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Statistics Summary -->
+        <div class="saudi-statistics glass-effect mt-4">
+            <h5>Handover Statistics</h5>
+            <div class="stat-row">
+                <span>Average Handover Time: <strong id="avgHandoverTime">0 min</strong></span>
+                <span class="ms-4">Total Cases Today: <strong id="totalCasesToday">0</strong></span>
+            </div>
+        </div>
+    `;
+    
+    // Load saved data if available
+    loadSavedSaudiCrescentData();
+}
+
+// Load saved Saudi Crescent data from localStorage
+function loadSavedSaudiCrescentData() {
+    try {
+        const savedData = localStorage.getItem('saudiCrescentLog');
+        if (savedData) {
+            const saudiCrescentData = JSON.parse(savedData);
+            const tbody = document.getElementById('saudiCrescentTableBody');
+            
+            if (saudiCrescentData.length > 0) {
+                tbody.innerHTML = ''; // Clear default row
+                
+                saudiCrescentData.forEach(data => {
+                    const rowId = Date.now() + Math.random();
+                    const row = document.createElement('tr');
+                    row.id = `saudi-row-${rowId}`;
+                    
+                    // Get ER doctor options
+                    const erDoctorOptions = doctors.map(d => 
+                        `<option value="${d.name}" ${d.name === data.receivingDoctor ? 'selected' : ''}>${d.name}</option>`
+                    ).join('');
+                    
+                    row.innerHTML = `
+                        <td><input type="date" class="form-control form-control-sm" value="${data.date || ''}" required></td>
+                        <td><input type="time" class="form-control form-control-sm time-received" value="${data.timeReceived || ''}" onchange="calculateHandoverDuration(${rowId})" required></td>
+                        <td>
+                            <select class="form-control form-control-sm" required>
+                                <option value="">Select Case Type</option>
+                                <option value="RTA" ${data.caseType === 'RTA' ? 'selected' : ''}>RTA (Road Traffic Accident)</option>
+                                <option value="Cardiac" ${data.caseType === 'Cardiac' ? 'selected' : ''}>Cardiac Emergency</option>
+                                <option value="Stroke" ${data.caseType === 'Stroke' ? 'selected' : ''}>Stroke</option>
+                                <option value="Trauma" ${data.caseType === 'Trauma' ? 'selected' : ''}>Trauma</option>
+                                <option value="Medical" ${data.caseType === 'Medical' ? 'selected' : ''}>Medical Emergency</option>
+                                <option value="Pediatric" ${data.caseType === 'Pediatric' ? 'selected' : ''}>Pediatric Emergency</option>
+                                <option value="OB/GYN" ${data.caseType === 'OB/GYN' ? 'selected' : ''}>OB/GYN Emergency</option>
+                                <option value="Other" ${data.caseType === 'Other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </td>
+                        <td><input type="text" class="form-control form-control-sm" value="${data.patientDetails || ''}" placeholder="Age/Gender/Brief"></td>
+                        <td>
+                            <select class="form-control form-control-sm" required>
+                                <option value="">Select Doctor</option>
+                                ${erDoctorOptions}
+                            </select>
+                        </td>
+                        <td><input type="time" class="form-control form-control-sm handover-time" value="${data.handoverTime || ''}" onchange="calculateHandoverDuration(${rowId})"></td>
+                        <td><input type="text" class="form-control form-control-sm duration-field" value="${data.duration || ''}" readonly></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${data.notes || ''}" placeholder="Notes"></td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="removeSaudiCrescentRow('${rowId}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+                
+                // Update statistics
+                updateSaudiCrescentStats();
+                
+                // Update last saved time  
+                const timestamp = localStorage.getItem('saudiCrescentLogTimestamp');
+                if (timestamp) {
+                    showToast('Previous Saudi Crescent data loaded', 'info');
+                }
+            } else {
+                // No data, add default row
+                addSaudiCrescentRow();
+            }
+        } else {
+            // No saved data, add default row
+            addSaudiCrescentRow();
+        }
+    } catch (error) {
+        console.error('Error loading saved Saudi Crescent data:', error);
+        // On error, add default row
+        addSaudiCrescentRow();
+    }
+}
+
+// Add Saudi Crescent Row
+function addSaudiCrescentRow() {
+    const tbody = document.getElementById('saudiCrescentTableBody');
+    const rowId = Date.now();
+    const today = new Date().toISOString().split('T')[0];
+    const currentTime = new Date().toTimeString().slice(0, 5);
+    
+    // Get ER doctors for dropdown
+    const erDoctorOptions = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+    
+    const row = document.createElement('tr');
+    row.id = `saudi-row-${rowId}`;
+    row.innerHTML = `
+        <td><input type="date" class="form-control form-control-sm" value="${today}" required></td>
+        <td><input type="time" class="form-control form-control-sm time-received" value="${currentTime}" onchange="calculateHandoverDuration(${rowId})" required></td>
+        <td>
+            <select class="form-control form-control-sm" required>
+                <option value="">Select Case Type</option>
+                <option value="RTA">RTA (Road Traffic Accident)</option>
+                <option value="Cardiac">Cardiac Emergency</option>
+                <option value="Stroke">Stroke</option>
+                <option value="Trauma">Trauma</option>
+                <option value="Medical">Medical Emergency</option>
+                <option value="Pediatric">Pediatric Emergency</option>
+                <option value="OB/GYN">OB/GYN Emergency</option>
+                <option value="Other">Other</option>
+            </select>
+        </td>
+        <td><input type="text" class="form-control form-control-sm" placeholder="Age/Gender/Brief"></td>
+        <td>
+            <select class="form-control form-control-sm" required>
+                <option value="">Select Doctor</option>
+                ${erDoctorOptions}
+            </select>
+        </td>
+        <td><input type="time" class="form-control form-control-sm handover-time" onchange="calculateHandoverDuration(${rowId})"></td>
+        <td><input type="text" class="form-control form-control-sm duration-field" readonly></td>
+        <td><input type="text" class="form-control form-control-sm" placeholder="Notes"></td>
+        <td>
+            <button class="btn btn-sm btn-danger" onclick="removeSaudiCrescentRow('${rowId}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+}
+
+// Calculate handover duration
+function calculateHandoverDuration(rowId) {
+    const row = document.getElementById(`saudi-row-${rowId}`);
+    const timeReceived = row.querySelector('.time-received').value;
+    const handoverTime = row.querySelector('.handover-time').value;
+    const durationField = row.querySelector('.duration-field');
+    
+    if (timeReceived && handoverTime) {
+        const [receivedHours, receivedMinutes] = timeReceived.split(':').map(Number);
+        const [handoverHours, handoverMinutes] = handoverTime.split(':').map(Number);
+        
+        let receivedTotalMinutes = receivedHours * 60 + receivedMinutes;
+        let handoverTotalMinutes = handoverHours * 60 + handoverMinutes;
+        
+        // Handle case where handover is next day
+        if (handoverTotalMinutes < receivedTotalMinutes) {
+            handoverTotalMinutes += 24 * 60;
+        }
+        
+        const diffMinutes = handoverTotalMinutes - receivedTotalMinutes;
+        durationField.value = diffMinutes + ' min';
+        
+        // Update statistics
+        updateSaudiCrescentStats();
+    } else {
+        durationField.value = '';
+    }
+}
+
+// Update Saudi Crescent statistics
+function updateSaudiCrescentStats() {
+    const rows = document.querySelectorAll('#saudiCrescentTableBody tr');
+    let totalDuration = 0;
+    let count = 0;
+    let todayCount = 0;
+    const today = new Date().toISOString().split('T')[0];
+    
+    rows.forEach(row => {
+        const dateInput = row.querySelector('input[type="date"]');
+        const durationField = row.querySelector('.duration-field');
+        
+        if (dateInput && dateInput.value === today) {
+            todayCount++;
+        }
+        
+        if (durationField && durationField.value) {
+            const minutes = parseInt(durationField.value);
+            if (!isNaN(minutes)) {
+                totalDuration += minutes;
+                count++;
+            }
+        }
+    });
+    
+    const avgDuration = count > 0 ? Math.round(totalDuration / count) : 0;
+    document.getElementById('avgHandoverTime').textContent = avgDuration + ' min';
+    document.getElementById('totalCasesToday').textContent = todayCount;
+}
+
+// Remove Saudi Crescent Row
+function removeSaudiCrescentRow(rowId) {
+    const row = document.getElementById(`saudi-row-${rowId}`);
+    if (row) {
+        row.remove();
+        updateSaudiCrescentStats();
+    }
+}
+
+// Save Saudi Crescent Log
+function saveSaudiCrescentLog() {
+    try {
+        const table = document.getElementById('saudiCrescentTable');
+        if (!table) {
+            showToast('Error: Saudi Crescent table not found', 'danger');
+            return;
+        }
+        
+        const rows = table.querySelectorAll('tbody tr');
+        const saudiCrescentData = [];
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('input, select');
+            const rowData = {
+                date: cells[0].value,
+                timeReceived: cells[1].value,
+                caseType: cells[2].value,
+                patientDetails: cells[3].value,
+                receivingDoctor: cells[4].value,
+                handoverTime: cells[5].value,
+                duration: cells[6].value,
+                notes: cells[7].value
+            };
+            
+            // Only save rows with some data
+            if (rowData.date || rowData.caseType || rowData.timeReceived) {
+                saudiCrescentData.push(rowData);
+            }
+        });
+        
+        if (saudiCrescentData.length === 0) {
+            showToast('No data to save', 'warning');
+            return;
+        }
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('saudiCrescentLog', JSON.stringify(saudiCrescentData));
+        localStorage.setItem('saudiCrescentLogTimestamp', new Date().toISOString());
+        
+        showToast('Saudi Red Crescent log saved successfully!', 'success');
+    } catch (error) {
+        console.error('Error saving Saudi Crescent log:', error);
+        showToast('Error saving Saudi Crescent log', 'danger');
+    }
+}
+
+// Clear Saudi Crescent Form
+function clearSaudiCrescentForm() {
+    try {
+        if (confirm('Are you sure you want to clear the form? All unsaved data will be lost.')) {
+            const tbody = document.getElementById('saudiCrescentTableBody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                addSaudiCrescentRow();
+                updateSaudiCrescentStats();
+                showToast('Form cleared successfully', 'info');
+            } else {
+                showToast('Error: Table body not found', 'danger');
+            }
+        }
+    } catch (error) {
+        console.error('Error clearing form:', error);
+        showToast('Error clearing form', 'danger');
+    }
+}
+
+// Export Saudi Crescent
+function exportSaudiCrescent(format) {
+    // Collect Saudi Crescent data from the table
+    const saudiCrescentData = [];
+    const rows = document.querySelectorAll('#saudiCrescentTableBody tr');
+    
+    if (rows.length === 0) {
+        showToast('No Saudi Red Crescent data to export', 'warning');
+        return;
+    }
+    
+    rows.forEach(row => {
+        try {
+            const cells = row.querySelectorAll('input, select');
+            if (cells.length < 8) return; // Skip if row doesn't have all fields
+            
+            const date = cells[0]?.value || '';
+            const timeReceived = cells[1]?.value || '';
+            const caseType = cells[2]?.value || '';
+            const patientDetails = cells[3]?.value || '';
+            const receivingDoctor = cells[4]?.value || '';
+            const handoverTime = cells[5]?.value || '';
+            const duration = cells[6]?.value || '';
+            const notes = cells[7]?.value || '';
+            
+            // Only include rows with data
+            if (date || timeReceived || caseType) {
+                saudiCrescentData.push({
+                    date,
+                    timeReceived,
+                    caseType,
+                    patientDetails,
+                    receivingDoctor,
+                    handoverTime,
+                    duration,
+                    notes
+                });
+            }
+        } catch (error) {
+            console.error('Error processing row:', error);
+        }
+    });
+    
+    if (saudiCrescentData.length === 0) {
+        showToast('No Saudi Red Crescent data to export', 'warning');
+        return;
+    }
+    
+    if (format === 'csv') {
+        exportSaudiCrescentCSV(saudiCrescentData);
+    } else if (format === 'pdf') {
+        exportSaudiCrescentPDF(saudiCrescentData);
+    }
+}
+
+// Export Saudi Crescent to CSV
+function exportSaudiCrescentCSV(data) {
+    const csvData = data.map(entry => ({
+        'Date': entry.date,
+        'Time Received': entry.timeReceived,
+        'Case Type': entry.caseType,
+        'Patient Details': entry.patientDetails,
+        'Receiving Doctor': entry.receivingDoctor,
+        'Handover Time': entry.handoverTime,
+        'Duration': entry.duration,
+        'Notes': entry.notes
+    }));
+    
+    const csvContent = arrayToCSV(csvData);
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `saudi_red_crescent_${today.replace(/-/g, '_')}.csv`;
+    exportToCSV(csvContent, filename);
+    showToast('Saudi Red Crescent data exported to CSV successfully', 'success');
+}
+
+// Export Saudi Crescent to PDF
+function exportSaudiCrescentPDF(data) {
+    const pdf = createPDF('Saudi Red Crescent Ambulance Log', `Form ID: SRC-001 | Version: 1.0`);
+    
+    // Get statistics
+    const avgHandoverTime = document.getElementById('avgHandoverTime').textContent;
+    const totalCasesToday = document.getElementById('totalCasesToday').textContent;
+    
+    // Meta information
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Summary Statistics:', 20, 65);
+    
+    pdf.setFont(undefined, 'normal');
+    pdf.text(`Average Handover Time: ${avgHandoverTime}`, 30, 75);
+    pdf.text(`Total Cases Today: ${totalCasesToday}`, 30, 85);
+    
+    // Saudi Crescent table
+    const tableData = data.map(entry => [
+        entry.date,
+        entry.timeReceived,
+        entry.caseType,
+        entry.patientDetails,
+        entry.receivingDoctor,
+        entry.handoverTime,
+        entry.duration,
+        entry.notes
+    ]);
+    
+    pdf.autoTable({
+        head: [['Date', 'Time Received', 'Case Type', 'Patient Details', 'Receiving Doctor', 'Handover Time', 'Duration', 'Notes']],
+        body: tableData,
+        startY: 100,
+        theme: 'grid',
+        headStyles: { fillColor: [44, 62, 80] },
+        alternateRowStyles: { fillColor: [248, 249, 250] },
+        styles: { fontSize: 8 },
+        columnStyles: {
+            2: { cellWidth: 25 }, // Case Type
+            3: { cellWidth: 30 }, // Patient Details
+            7: { cellWidth: 25 }  // Notes
+        }
+    });
+    
+    const today = new Date().toISOString().split('T')[0];
+    pdf.save(`saudi_red_crescent_${today.replace(/-/g, '_')}.pdf`);
+    showToast('Saudi Red Crescent data exported to PDF successfully', 'success');
+}
+
+// Initialize theme on load
+loadTheme();
+
+// Make theme functions globally accessible
+window.setLightMode = setLightMode;
+window.setDarkMode = setDarkMode;
+window.toggleTheme = toggleTheme;
+
+// Mobile Sidebar Toggle
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar-modern');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (!sidebar) return;
+    
+    // Toggle sidebar
+    sidebar.classList.toggle('active');
+    
+    // Create/toggle overlay
+    if (sidebar.classList.contains('active')) {
+        if (!overlay) {
+            const newOverlay = document.createElement('div');
+            newOverlay.id = 'sidebarOverlay';
+            newOverlay.className = 'sidebar-overlay';
+            newOverlay.onclick = toggleSidebar;
+            document.body.appendChild(newOverlay);
+            setTimeout(() => newOverlay.classList.add('active'), 10);
+        }
+    } else {
+        if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 300);
+        }
+    }
+}
+
+// Make sidebar toggle globally accessible
+window.toggleSidebar = toggleSidebar;
+
+// Global test function for debugging (accessible from browser console)
+window.testDarkMode = function() {
+    console.log('=== DARK MODE TEST ===');
+    const body = document.body;
+    body.classList.add('dark-mode');
+    body.style.backgroundColor = '#0f0f23';
+    body.style.color = '#ffffff';
+    console.log('Dark mode applied. Body classes:', body.className);
+    console.log('Background color:', window.getComputedStyle(body).backgroundColor);
+};
+
+window.testLightMode = function() {
+    console.log('=== LIGHT MODE TEST ===');
+    const body = document.body;
+    body.classList.remove('dark-mode');
+    body.style.backgroundColor = '#f0f4f8';
+    body.style.color = '#1a202c';
+    console.log('Light mode applied. Body classes:', body.className);
+    console.log('Background color:', window.getComputedStyle(body).backgroundColor);
+};
+
+// Make toggleTheme globally accessible for debugging
+window.toggleTheme = toggleTheme;
+
+// Add styles for ripple effect
+const style = document.createElement('style');
+style.textContent = `
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transform: scale(0);
+        animation: ripple-animation 0.6s;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+    
+    .skeleton-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .skeleton-card {
+        padding: 2rem;
+        border-radius: 24px;
+    }
+    
+    .skeleton-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+    }
+    
+    .skeleton-text {
+        height: 20px;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .skeleton-text.short {
+        width: 60%;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    .animate-in {
+        animation: fadeInUp 0.5s ease forwards;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .doctor-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .doctor-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .stat-card {
+        padding: 1.5rem;
+        border-radius: 24px;
+    }
+    
+    .stat-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+    }
+    
+    .stat-body {
+        position: relative;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .stat-percentage {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .progress-ring {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .navbar-modern.scrolled {
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .global-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    
+    .command-item {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        cursor: pointer;
+        transition: var(--transition-fast);
+        border-radius: 12px;
+    }
+    
+    .command-item:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .command-item i {
+        width: 24px;
+        color: var(--text-muted);
+    }
+`;
+document.head.appendChild(style);
+
+// Add missing implementations
+
+// Render Workload Analysis
+function renderWorkloadAnalysis(data) {
+    const container = document.getElementById('workloadContent');
+    
+    if (!data || !data.doctorAnalysis) {
+        container.innerHTML = `
+            <div class="empty-state glass-effect">
+                <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No workload data available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Transform the data to the expected format
+    const analysis = Object.values(data.doctorAnalysis).map(doctorData => ({
+        name: doctorData.doctor.name,
+        totalShifts: doctorData.workload.total_duties,
+        weekendShifts: doctorData.weekend.total_weekend_duties,
+        workloadScore: (doctorData.workload.work_percentage / data.departmentStats.averages.percentage) * 100,
+        shiftBreakdown: {
+            morning: doctorData.shifts.morning,
+            evening: doctorData.shifts.evening,
+            night: doctorData.shifts.night
+        }
+    }));
+    
+    data.analysis = analysis;
+    
+    let html = `
+        <div class="workload-analysis-container">
+            <!-- Export Buttons -->
+            <div class="analysis-header mb-3">
+                <h4 class="section-subtitle">
+                    <i class="fas fa-chart-bar me-2"></i>Workload Analysis
+                </h4>
+                <div class="export-buttons">
+                    <button class="modern-btn btn-sm secondary-btn" onclick="exportWorkload('csv')" title="Export to CSV">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </button>
+                    <button class="modern-btn btn-sm secondary-btn" onclick="exportWorkload('pdf')" title="Export to PDF">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chart Section -->
+            <div class="chart-section glass-effect mb-4">
+                <h4 class="section-subtitle mb-3">
+                    <i class="fas fa-chart-bar me-2"></i>Monthly Workload Distribution
+                </h4>
+                <div class="chart-wrapper">
+                    <canvas id="workloadChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Stats Grid -->
+            <div class="workload-stats-grid">
+    `;
+    
+    // Create stat cards for each doctor
+    data.analysis.forEach(doctor => {
+        const score = doctor.workloadScore || 0;
+        const scoreClass = score > 120 ? 'high' : score > 100 ? 'medium' : 'low';
+        const badgeColor = score > 120 ? 'danger' : score > 100 ? 'warning' : 'success';
+        
+        html += `
+            <div class="workload-card glass-effect">
+                <div class="workload-card-header">
+                    <div class="doctor-info">
+                        <div class="doctor-avatar ${getRandomGradient()}">
+                            ${doctor.name.replace('Dr. ', '').charAt(0)}
+                        </div>
+                        <h5 class="doctor-name">${doctor.name}</h5>
+                    </div>
+                    <div class="workload-badge ${badgeColor}">
+                        ${score.toFixed(0)}%
+                    </div>
+                </div>
+                
+                <div class="workload-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Total Shifts</span>
+                        <span class="stat-value">${doctor.totalShifts}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Weekend Shifts</span>
+                        <span class="stat-value">${doctor.weekendShifts}</span>
+                    </div>
+                </div>
+                
+                <div class="shift-breakdown">
+                    <div class="shift-item morning">
+                        <i class="fas fa-sun"></i>
+                        <span>${doctor.shiftBreakdown.morning || 0}</span>
+                    </div>
+                    <div class="shift-item evening">
+                        <i class="fas fa-cloud-sun"></i>
+                        <span>${doctor.shiftBreakdown.evening || 0}</span>
+                    </div>
+                    <div class="shift-item night">
+                        <i class="fas fa-moon"></i>
+                        <span>${doctor.shiftBreakdown.night || 0}</span>
+                    </div>
+                </div>
+                
+                <div class="workload-meter">
+                    <div class="meter-fill ${scoreClass}" style="width: ${Math.min(score, 100)}%"></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+            
+            <!-- Detailed Analysis -->
+            <div class="analysis-summary glass-effect mt-4">
+                <h4 class="section-subtitle mb-3">
+                    <i class="fas fa-info-circle me-2"></i>Workload Analysis Summary
+                </h4>
+                <div class="summary-content">
+                    <p>Average workload: <strong>${(data.analysis.reduce((sum, d) => sum + d.workloadScore, 0) / data.analysis.length).toFixed(1)}%</strong></p>
+                    <p>Most loaded: <strong>${data.analysis.reduce((max, d) => d.workloadScore > max.score ? {name: d.name, score: d.workloadScore} : max, {score: 0}).name}</strong></p>
+                    <p>Total shifts this month: <strong>${data.analysis.reduce((sum, d) => sum + d.totalShifts, 0)}</strong></p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    
+    // Create enhanced workload chart
+    setTimeout(() => {
+        const ctx = document.getElementById('workloadChart');
+        if (ctx && charts.workload) {
+            charts.workload.destroy();
+        }
+        
+        if (ctx) {
+            charts.workload = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.analysis.map(d => d.name.replace('Dr. ', '')),
+                    datasets: [
+                        {
+                            label: 'Morning',
+                            data: data.analysis.map(d => d.shiftBreakdown.morning || 0),
+                            backgroundColor: 'rgba(255, 193, 71, 0.8)',
+                            borderRadius: 5
+                        },
+                        {
+                            label: 'Evening',
+                            data: data.analysis.map(d => d.shiftBreakdown.evening || 0),
+                            backgroundColor: 'rgba(79, 172, 254, 0.8)',
+                            borderRadius: 5
+                        },
+                        {
+                            label: 'Night',
+                            data: data.analysis.map(d => d.shiftBreakdown.night || 0),
+                            backgroundColor: 'rgba(157, 78, 221, 0.8)',
+                            borderRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: true,
+                            callbacks: {
+                                footer: (tooltipItems) => {
+                                    let sum = 0;
+                                    tooltipItems.forEach(item => {
+                                        sum += item.parsed.y;
+                                    });
+                                    return 'Total: ' + sum + ' shifts';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }, 100);
+}
+
+// Render Fairness Metrics
+function renderFairnessMetrics(data) {
+    const container = document.getElementById('fairnessContent');
+    
+    console.log('Fairness data received:', data);
+    
+    if (!container) {
+        console.error('Fairness content container not found!');
+        return;
+    }
+    
+    if (!data) {
+        container.innerHTML = `
+            <div class="empty-state glass-effect">
+                <i class="fas fa-balance-scale fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No fairness data available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    try {
+    
+    // Transform the data to match expected format
+    const overallScore = data.fairnessScores?.scores?.overall || 75;
+    const workloadScore = data.fairnessScores?.scores?.workload || 0;
+    const nightScore = data.fairnessScores?.scores?.night || 0;
+    const weekendScore = data.fairnessScores?.scores?.weekend || 0;
+    
+    console.log('Fairness scores:', { overallScore, workloadScore, nightScore, weekendScore });
+    
+    // Create doctor metrics from doctorStats
+    const doctorMetrics = Object.values(data.doctorStats || {}).map(stats => ({
+        name: stats.doctor.name,
+        totalDuties: stats.totals.shifts,
+        weekendDuties: stats.totals.weekend,
+        nightShifts: stats.shifts.night,
+        nightShiftPercentage: stats.percentages.night || 0,
+        weekendPercentage: stats.percentages.weekend || 0,
+        workloadPercentage: stats.percentages.workload,
+        individualFairnessScore: 100 - Math.abs(100 - stats.percentages.workload),
+        deviationFromAverage: stats.percentages.workload - 100
+    }));
+    
+    console.log('Doctor metrics:', doctorMetrics);
+    
+    // Simple test to ensure rendering works
+    if (!doctorMetrics || doctorMetrics.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state glass-effect">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No doctor statistics available for this period</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <div class="fairness-analysis-container">
+            <!-- Export Buttons -->
+            <div class="analysis-header mb-3">
+                <h4 class="section-subtitle">
+                    <i class="fas fa-balance-scale me-2"></i>Fairness & Equity Analysis
+                </h4>
+                <div class="export-buttons">
+                    <button class="modern-btn btn-sm secondary-btn" onclick="exportFairness('csv')" title="Export to CSV">
+                        <i class="fas fa-file-csv me-1"></i>CSV
+                    </button>
+                    <button class="modern-btn btn-sm secondary-btn" onclick="exportFairness('pdf')" title="Export to PDF">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Overall Metrics -->
+            <div class="fairness-metrics-grid mb-4">
+                <div class="fairness-metric-card glass-effect">
+                    <div class="metric-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h6>Overall Fairness Score</h6>
+                        <div class="metric-value ${overallScore > 80 ? 'success' : overallScore > 60 ? 'warning' : 'danger'}">
+                            ${overallScore.toFixed(1)}%
+                        </div>
+                        <div class="metric-bar">
+                            <div class="bar-fill ${overallScore > 80 ? 'success' : overallScore > 60 ? 'warning' : 'danger'}" 
+                                 style="width: ${overallScore}%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="fairness-metric-card glass-effect">
+                    <div class="metric-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h6>Workload Fairness</h6>
+                        <div class="metric-value">${workloadScore.toFixed(1)}%</div>
+                        <p class="metric-desc">Lower is better</p>
+                    </div>
+                </div>
+                
+                <div class="fairness-metric-card glass-effect">
+                    <div class="metric-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h6>Night Shift Equity</h6>
+                        <div class="metric-value">${nightScore.toFixed(1)}%</div>
+                        <p class="metric-desc">Balance across shifts</p>
+                    </div>
+                </div>
+                
+                <div class="fairness-metric-card glass-effect">
+                    <div class="metric-icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h6>Weekend Fairness</h6>
+                        <div class="metric-value">${weekendScore.toFixed(1)}%</div>
+                        <p class="metric-desc">Weekend distribution</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chart Section -->
+            <div class="chart-section glass-effect mb-4">
+                <h4 class="section-subtitle mb-3">
+                    <i class="fas fa-chart-radar me-2"></i>Individual Fairness Analysis
+                </h4>
+                <div class="chart-wrapper">
+                    <canvas id="fairnessChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Doctor Cards -->
+            <div class="fairness-doctor-grid">
+    `;
+    
+    doctorMetrics.forEach(doctor => {
+        const deviationClass = Math.abs(doctor.deviationFromAverage) > 20 ? 'danger' : 
+                              Math.abs(doctor.deviationFromAverage) > 10 ? 'warning' : 'success';
+        
+        html += `
+            <div class="fairness-doctor-card glass-effect">
+                <div class="doctor-header">
+                    <div class="doctor-avatar ${getRandomGradient()}">
+                        ${doctor.name.replace('Dr. ', '').charAt(0)}
+                    </div>
+                    <div class="doctor-info">
+                        <h5>${doctor.name}</h5>
+                        <span class="fairness-score">${doctor.individualFairnessScore.toFixed(1)} score</span>
+                    </div>
+                </div>
+                
+                <div class="doctor-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">Total Duties</span>
+                        <span class="metric-value">${doctor.totalDuties}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Deviation</span>
+                        <span class="metric-value ${deviationClass}">
+                            ${doctor.deviationFromAverage > 0 ? '+' : ''}${doctor.deviationFromAverage.toFixed(1)}%
+                        </span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Night Shifts</span>
+                        <span class="metric-value">${doctor.nightShiftPercentage.toFixed(1)}%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Weekends</span>
+                        <span class="metric-value">${doctor.weekendPercentage.toFixed(1)}%</span>
+                    </div>
+                </div>
+                
+                <div class="fairness-visual">
+                    <div class="fairness-gauge">
+                        <div class="gauge-fill ${deviationClass}" 
+                             style="transform: rotate(${(doctor.individualFairnessScore / 100) * 180}deg)"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+            
+            ${data.recommendations && data.recommendations.length > 0 ? `
+            <!-- Recommendations -->
+            <div class="recommendations-section glass-effect mt-4">
+                <h4 class="section-subtitle mb-3">
+                    <i class="fas fa-lightbulb me-2"></i>Recommendations for Improvement
+                </h4>
+                <div class="recommendations-list">
+                    ${data.recommendations.map((rec, index) => `
+                        <div class="recommendation-item">
+                            <div class="rec-number">${index + 1}</div>
+                            <div class="rec-content">
+                                <h6 class="rec-title">${rec.title || rec}</h6>
+                                ${rec.description ? `<p class="rec-description">${rec.description}</p>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    
+    // Create fairness radar chart
+    setTimeout(() => {
+        try {
+            const chartContainer = document.getElementById('fairnessChart');
+            console.log('Chart container found:', chartContainer);
+            
+            if (!chartContainer) {
+                console.error('Fairness chart container not found!');
+                return;
+            }
+            
+            const ctx = chartContainer.getContext('2d');
+            if (charts.fairness) {
+                charts.fairness.destroy();
+            }
+            
+            if (ctx) {
+                charts.fairness = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: doctorMetrics.map(d => d.name.replace('Dr. ', '')),
+                    datasets: [
+                        {
+                            label: 'Fairness Score',
+                            data: doctorMetrics.map(d => d.individualFairnessScore),
+                            backgroundColor: 'rgba(79, 172, 254, 0.2)',
+                            borderColor: 'rgba(79, 172, 254, 0.8)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(79, 172, 254, 0.8)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(79, 172, 254, 0.8)'
+                        },
+                        {
+                            label: 'Target (100)',
+                            data: doctorMetrics.map(() => 100),
+                            backgroundColor: 'rgba(255, 193, 71, 0.1)',
+                            borderColor: 'rgba(255, 193, 71, 0.5)',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            padding: 10
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 120,
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                backdropColor: 'transparent'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            pointLabels: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        } catch (error) {
+            console.error('Error creating fairness chart:', error);
+        }
+    }, 100);
+    
+    } catch (error) {
+        console.error('Error rendering fairness metrics:', error);
+        container.innerHTML = `
+            <div class="empty-state glass-effect">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <p class="text-muted">Error loading fairness data</p>
+                <p class="text-muted small">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Initialize Consultation Form
+function initializeConsultationForm() {
+    const content = document.getElementById('consultationContent');
+    content.innerHTML = `
+        <!-- Action Buttons -->
+        <div class="consultation-actions mb-3">
+            <button class="btn btn-success btn-sm" onclick="addConsultationRow()">
+                <i class="fas fa-plus me-2"></i>Add Row
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="saveConsultationLog()">
+                <i class="fas fa-save me-2"></i>Save
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="clearConsultationForm()">
+                <i class="fas fa-eraser me-2"></i>Clear Form
+            </button>
+            <div class="btn-group ms-2" role="group">
+                <button type="button" class="btn btn-sm btn-info" onclick="exportConsultation('csv')" title="Export to CSV">
+                    <i class="fas fa-file-csv me-1"></i>CSV
+                </button>
+                <button type="button" class="btn btn-sm btn-info" onclick="exportConsultation('pdf')" title="Export to PDF">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+            </div>
+            <span id="lastSaved" class="ms-3 text-muted"></span>
+        </div>
+
+        <!-- Consultation Table -->
+        <div class="table-responsive">
+            <table class="table consultation-table" id="consultationTable">
+                <thead class="table-dark sticky-header">
+                    <tr>
+                        <th>Date</th>
+                        <th>Shift</th>
+                        <th>ER Doctor</th>
+                        <th>Time Called</th>
+                        <th>Specialist</th>
+                        <th>Specialty</th>
+                        <th>Response</th>
+                        <th>Arrival Time</th>
+                        <th>Response Time</th>
+                        <th>Patient ID</th>
+                        <th>Outcome</th>
+                        <th>Urgent</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="consultationTableBody">
+                    <!-- Rows will be generated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    // Load saved data if available
+    loadSavedConsultationData();
+}
+
+// Load saved consultation data from localStorage
+function loadSavedConsultationData() {
+    try {
+        const savedData = localStorage.getItem('consultationLog');
+        if (savedData) {
+            const consultationData = JSON.parse(savedData);
+            const tbody = document.getElementById('consultationTableBody');
+            
+            if (consultationData.length > 0) {
+                tbody.innerHTML = ''; // Clear default row
+                
+                consultationData.forEach(data => {
+                    const rowId = Date.now() + Math.random();
+                    const row = document.createElement('tr');
+                    row.id = `consult-row-${rowId}`;
+                    
+                    // Get ER doctor options
+                    const erDoctorOptions = doctors.map(d => 
+                        `<option value="${d.name}" ${d.name === data.erDoctor ? 'selected' : ''}>${d.name}</option>`
+                    ).join('');
+                    
+                    // Build specialist options
+                    const specialistOptions = Object.entries(specialists).map(([dept, docs]) => 
+                        `<optgroup label="${dept}">
+                            ${docs.map(doc => 
+                                `<option value="${doc}" data-specialty="${dept}" ${doc === data.specialist ? 'selected' : ''}>${doc}</option>`
+                            ).join('')}
+                        </optgroup>`
+                    ).join('');
+                    
+                    row.innerHTML = `
+                        <td><input type="date" class="form-control form-control-sm" value="${data.date || ''}" required></td>
+                        <td>
+                            <select class="form-control form-control-sm" required>
+                                <option value="">Select Shift</option>
+                                <option value="Morning" ${data.shift === 'Morning' ? 'selected' : ''}>Morning (7AM-3PM)</option>
+                                <option value="Evening" ${data.shift === 'Evening' ? 'selected' : ''}>Evening (3PM-11PM)</option>
+                                <option value="Night" ${data.shift === 'Night' ? 'selected' : ''}>Night (11PM-7AM)</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-control form-control-sm" required>
+                                <option value="">Select ER Doctor</option>
+                                ${erDoctorOptions}
+                            </select>
+                        </td>
+                        <td><input type="time" class="form-control form-control-sm time-called" value="${data.timeCalled || ''}" onchange="calculateResponseTime(${rowId})" required></td>
+                        <td>
+                            <select class="form-control form-control-sm specialist-select" onchange="updateSpecialty(${rowId})" required>
+                                <option value="">Select Specialist</option>
+                                ${specialistOptions}
+                            </select>
+                        </td>
+                        <td><input type="text" class="form-control form-control-sm specialty-field" value="${data.specialty || ''}" readonly></td>
+                        <td>
+                            <select class="form-control form-control-sm response-status" onchange="handleResponseChange(${rowId})" required>
+                                <option value="">Select</option>
+                                <option value="Responded" ${data.response === 'Responded' ? 'selected' : ''}>Responded</option>
+                                <option value="No Response" ${data.response === 'No Response' ? 'selected' : ''}>No Response</option>
+                                <option value="Delayed" ${data.response === 'Delayed' ? 'selected' : ''}>Delayed</option>
+                            </select>
+                        </td>
+                        <td><input type="time" class="form-control form-control-sm arrival-time" value="${data.arrivalTime || ''}" onchange="calculateResponseTime(${rowId})"></td>
+                        <td><input type="text" class="form-control form-control-sm response-time" value="${data.responseTime || ''}" readonly></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${data.patientId || ''}" placeholder="Patient ID"></td>
+                        <td><input type="text" class="form-control form-control-sm" value="${data.outcome || ''}" placeholder="Outcome"></td>
+                        <td>
+                            <input type="checkbox" class="form-check-input" ${data.urgent ? 'checked' : ''}>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="removeConsultationRow('${rowId}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+                
+                // Update last saved time
+                const timestamp = localStorage.getItem('consultationLogTimestamp');
+                if (timestamp) {
+                    const lastSaved = document.getElementById('lastSaved');
+                    if (lastSaved) {
+                        lastSaved.textContent = `Last saved: ${new Date(timestamp).toLocaleString()}`;
+                    }
+                }
+                
+                showToast('Previous consultation data loaded', 'info');
+            } else {
+                // No data, add default row
+                addConsultationRow();
+            }
+        } else {
+            // No saved data, add default row
+            addConsultationRow();
+        }
+    } catch (error) {
+        console.error('Error loading saved data:', error);
+        // On error, add default row
+        addConsultationRow();
+    }
+}
+
+// Specialist data
+const specialists = {
+    'General Surgery': ['Renaldo', 'Mammoun'],
+    'Orthopedics': ['Mahmud', 'Joseph'],
+    'Pediatrics': ['Mahmoud Badawy'],
+    'Obstetrics & Gynaecology': ['Frazana', 'Asma'],
+    'Internal Medicine': ['Fathi'],
+    'Ophthalmology': ['Yanelis'],
+    'ENT': ['Mahasen'],
+    'Anesthesia': ['Julio'],
+    'Nephrology': ['Abdulraouf']
+};
+
+// Add Consultation Row
+function addConsultationRow() {
+    const tbody = document.getElementById('consultationTableBody');
+    const rowId = Date.now();
+    
+    // Get current date and ER doctors from loaded doctors
+    const today = new Date().toISOString().split('T')[0];
+    const erDoctorOptions = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+    
+    const row = document.createElement('tr');
+    row.id = `consult-row-${rowId}`;
+    row.innerHTML = `
+        <td><input type="date" class="form-control form-control-sm" value="${today}" required></td>
+        <td>
+            <select class="form-control form-control-sm" required>
+                <option value="">Select Shift</option>
+                <option value="Morning">Morning (7AM-3PM)</option>
+                <option value="Evening">Evening (3PM-11PM)</option>
+                <option value="Night">Night (11PM-7AM)</option>
+            </select>
+        </td>
+        <td>
+            <select class="form-control form-control-sm" required>
+                <option value="">Select ER Doctor</option>
+                ${erDoctorOptions}
+            </select>
+        </td>
+        <td><input type="time" class="form-control form-control-sm time-called" onchange="calculateResponseTime(${rowId})" required></td>
+        <td>
+            <select class="form-control form-control-sm specialist-select" onchange="updateSpecialty(${rowId})" required>
+                <option value="">Select Specialist</option>
+                ${Object.entries(specialists).map(([dept, docs]) => 
+                    `<optgroup label="${dept}">
+                        ${docs.map(doc => `<option value="${doc}" data-specialty="${dept}">${doc}</option>`).join('')}
+                    </optgroup>`
+                ).join('')}
+            </select>
+        </td>
+        <td><input type="text" class="form-control form-control-sm specialty-field" readonly></td>
+        <td>
+            <select class="form-control form-control-sm response-status" onchange="handleResponseChange(${rowId})" required>
+                <option value="">Select</option>
+                <option value="Responded">Responded</option>
+                <option value="No Response">No Response</option>
+                <option value="Delayed">Delayed</option>
+            </select>
+        </td>
+        <td><input type="time" class="form-control form-control-sm arrival-time" onchange="calculateResponseTime(${rowId})"></td>
+        <td><input type="text" class="form-control form-control-sm response-time" readonly></td>
+        <td><input type="text" class="form-control form-control-sm" placeholder="Patient ID"></td>
+        <td><input type="text" class="form-control form-control-sm" placeholder="Outcome"></td>
+        <td>
+            <input type="checkbox" class="form-check-input">
+        </td>
+        <td>
+            <button class="btn btn-sm btn-danger" onclick="removeConsultationRow('${rowId}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+}
+
+// Update specialty field when specialist is selected
+function updateSpecialty(rowId) {
+    const row = document.getElementById(`consult-row-${rowId}`);
+    const specialistSelect = row.querySelector('.specialist-select');
+    const specialtyField = row.querySelector('.specialty-field');
+    
+    const selectedOption = specialistSelect.options[specialistSelect.selectedIndex];
+    const specialty = selectedOption.getAttribute('data-specialty') || '';
+    specialtyField.value = specialty;
+}
+
+// Handle response status change
+function handleResponseChange(rowId) {
+    const row = document.getElementById(`consult-row-${rowId}`);
+    const responseStatus = row.querySelector('.response-status').value;
+    const arrivalTimeInput = row.querySelector('.arrival-time');
+    const responseTimeInput = row.querySelector('.response-time');
+    
+    if (responseStatus === 'No Response') {
+        arrivalTimeInput.value = '';
+        arrivalTimeInput.disabled = true;
+        responseTimeInput.value = 'N/A';
+    } else {
+        arrivalTimeInput.disabled = false;
+        calculateResponseTime(rowId);
+    }
+}
+
+// Calculate response time
+function calculateResponseTime(rowId) {
+    const row = document.getElementById(`consult-row-${rowId}`);
+    const timeCalled = row.querySelector('.time-called').value;
+    const arrivalTime = row.querySelector('.arrival-time').value;
+    const responseTimeField = row.querySelector('.response-time');
+    const responseStatus = row.querySelector('.response-status').value;
+    
+    if (responseStatus === 'No Response') {
+        responseTimeField.value = 'N/A';
+        return;
+    }
+    
+    if (timeCalled && arrivalTime) {
+        // Convert times to minutes
+        const [calledHours, calledMinutes] = timeCalled.split(':').map(Number);
+        const [arrivalHours, arrivalMinutes] = arrivalTime.split(':').map(Number);
+        
+        let calledTotalMinutes = calledHours * 60 + calledMinutes;
+        let arrivalTotalMinutes = arrivalHours * 60 + arrivalMinutes;
+        
+        // Handle case where arrival is next day
+        if (arrivalTotalMinutes < calledTotalMinutes) {
+            arrivalTotalMinutes += 24 * 60;
+        }
+        
+        const diffMinutes = arrivalTotalMinutes - calledTotalMinutes;
+        const hours = Math.floor(diffMinutes / 60);
+        const minutes = diffMinutes % 60;
+        
+        responseTimeField.value = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+    } else {
+        responseTimeField.value = '';
+    }
+}
+
+// Remove Consultation Row
+function removeConsultationRow(rowId) {
+    const row = document.getElementById(`consult-row-${rowId}`);
+    if (row) {
+        row.remove();
+    }
+}
+
+// Save Consultation Log
+function saveConsultationLog() {
+    try {
+        const table = document.getElementById('consultationTable');
+        if (!table) {
+            showToast('Error: Consultation table not found', 'danger');
+            return;
+        }
+        
+        const rows = table.querySelectorAll('tbody tr');
+        const consultationData = [];
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('input, select');
+            const rowData = {
+                date: cells[0].value,
+                shift: cells[1].value,
+                erDoctor: cells[2].value,
+                timeCalled: cells[3].value,
+                specialist: cells[4].value,
+                specialty: cells[5].value,
+                response: cells[6].value,
+                arrivalTime: cells[7].value,
+                responseTime: cells[8].value,
+                patientId: cells[9].value,
+                outcome: cells[10].value,
+                urgent: cells[11].checked
+            };
+            
+            // Only save rows with some data
+            if (rowData.date || rowData.specialist || rowData.patientId) {
+                consultationData.push(rowData);
+            }
+        });
+        
+        if (consultationData.length === 0) {
+            showToast('No data to save', 'warning');
+            return;
+        }
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('consultationLog', JSON.stringify(consultationData));
+        localStorage.setItem('consultationLogTimestamp', new Date().toISOString());
+        
+        showToast('Consultation log saved successfully!', 'success');
+        const lastSaved = document.getElementById('lastSaved');
+        if (lastSaved) {
+            lastSaved.textContent = `Last saved: ${new Date().toLocaleTimeString()}`;
+        }
+    } catch (error) {
+        console.error('Error saving consultation log:', error);
+        showToast('Error saving consultation log', 'danger');
+    }
+}
+
+// Clear Consultation Form
+function clearConsultationForm() {
+    try {
+        if (confirm('Are you sure you want to clear the form? All unsaved data will be lost.')) {
+            initializeConsultationForm();
+            showToast('Form cleared successfully', 'info');
+        }
+    } catch (error) {
+        console.error('Error clearing form:', error);
+        showToast('Error clearing form', 'danger');
+    }
+}
+
+// Export Consultation
+function exportConsultation(format) {
+    try {
+        const table = document.getElementById('consultationTable');
+        if (!table) {
+            console.error('Consultation table not found');
+            showToast('Error: Consultation table not found', 'danger');
+            return;
+        }
+        
+        const rows = table.querySelectorAll('tbody tr');
+        
+        if (rows.length === 0) {
+            showToast('No consultation data to export', 'warning');
+            return;
+        }
+    
+    // Collect data from table
+    const consultationData = [];
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('input, select');
+        const rowData = {
+            date: cells[0].value,
+            shift: cells[1].value,
+            erDoctor: cells[2].value,
+            timeCalled: cells[3].value,
+            specialist: cells[4].value,
+            specialty: cells[5].value,
+            response: cells[6].value,
+            arrivalTime: cells[7].value,
+            responseTime: cells[8].value,
+            patientId: cells[9].value,
+            outcome: cells[10].value,
+            urgent: cells[11].checked ? 'Yes' : 'No'
+        };
+        
+        // Only include rows with at least some data
+        if (rowData.date || rowData.specialist || rowData.patientId) {
+            consultationData.push(rowData);
+        }
+    });
+    
+    if (consultationData.length === 0) {
+        showToast('No valid consultation data to export', 'warning');
+        return;
+    }
+    
+    if (format === 'csv') {
+        exportConsultationCSV(consultationData);
+    } else if (format === 'pdf') {
+        exportConsultationPDF(consultationData);
+    }
+    } catch (error) {
+        console.error('Error exporting consultation:', error);
+        showToast('Error exporting consultation data', 'danger');
+    }
+}
+
+// Export Consultation as CSV
+function exportConsultationCSV(data) {
+    try {
+        const csvData = data.map(row => ({
+            'Date': row.date || '',
+            'Shift': row.shift || '',
+            'ER Doctor': row.erDoctor || '',
+            'Time Called': row.timeCalled || '',
+            'Specialist': row.specialist || '',
+            'Specialty': row.specialty || '',
+            'Response': row.response || '',
+            'Arrival Time': row.arrivalTime || '',
+            'Response Time': row.responseTime || '',
+            'Patient ID': row.patientId || '',
+            'Outcome': row.outcome || '',
+            'Urgent': row.urgent || ''
+        }));
+        
+        const csv = arrayToCSV(csvData);
+        exportToCSV(csv, `consultation_log_${new Date().toISOString().split('T')[0]}.csv`);
+        
+        showToast('Consultation log exported as CSV', 'success');
+    } catch (error) {
+        console.error('Error exporting CSV:', error);
+        showToast('Error exporting to CSV', 'danger');
+    }
+}
+
+// Export Consultation as PDF
+function exportConsultationPDF(data) {
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
+        
+        // Title
+        doc.setFontSize(16);
+        doc.text('Specialist Consultation Log', 14, 15);
+        
+        // Date
+        doc.setFontSize(10);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 25);
+        
+        // Table headers
+        const headers = [['Date', 'Shift', 'ER Doctor', 'Time Called', 'Specialist', 'Specialty', 
+                         'Response', 'Arrival', 'Response Time', 'Patient ID', 'Outcome', 'Urgent']];
+        
+        // Table data
+        const tableData = data.map(row => [
+            row.date || '',
+            row.shift || '',
+            row.erDoctor || '',
+            row.timeCalled || '',
+            row.specialist || '',
+            row.specialty || '',
+            row.response || '',
+            row.arrivalTime || '',
+            row.responseTime || '',
+            row.patientId || '',
+            row.outcome || '',
+            row.urgent || ''
+        ]);
+        
+        // Generate table
+        doc.autoTable({
+            head: headers,
+            body: tableData,
+            startY: 30,
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [220, 53, 69], textColor: 255 },
+            columnStyles: {
+                0: { cellWidth: 20 },  // Date
+                1: { cellWidth: 25 },  // Shift
+                2: { cellWidth: 25 },  // ER Doctor
+                3: { cellWidth: 18 },  // Time Called
+                4: { cellWidth: 25 },  // Specialist
+                5: { cellWidth: 25 },  // Specialty
+                6: { cellWidth: 20 },  // Response
+                7: { cellWidth: 18 },  // Arrival
+                8: { cellWidth: 22 },  // Response Time
+                9: { cellWidth: 20 },  // Patient ID
+                10: { cellWidth: 35 }, // Outcome
+                11: { cellWidth: 15 }  // Urgent
+            }
+        });
+        
+        // Summary
+        const totalConsults = data.length;
+        const responded = data.filter(d => d.response === 'Responded').length;
+        const noResponse = data.filter(d => d.response === 'No Response').length;
+        const urgent = data.filter(d => d.urgent === 'Yes').length;
+        
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(10);
+        doc.text(`Summary: Total Consultations: ${totalConsults} | Responded: ${responded} | No Response: ${noResponse} | Urgent: ${urgent}`, 14, finalY);
+        
+        // Save PDF
+        doc.save(`consultation_log_${new Date().toISOString().split('T')[0]}.pdf`);
+        
+        showToast('Consultation log exported as PDF', 'success');
+    } catch (error) {
+        console.error('Error exporting PDF:', error);
+        showToast('Error exporting to PDF', 'danger');
+    }
+}
+
+// Placeholder implementations for missing views
+function renderCalendarView(container) {
+    container.innerHTML = `
+        <div class="calendar-view glass-effect">
+            <div class="text-center p-5">
+                <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                <h4>Calendar View</h4>
+                <p class="text-muted">Calendar view coming soon!</p>
+            </div>
+        </div>
+    `;
+}
+
+function renderTimelineView(container) {
+    console.log('[Timeline] Rendering timeline view');
+    console.log('[Timeline] Current roster:', currentRoster);
+    
+    if (!currentRoster || currentRoster.length === 0) {
+        console.log('[Timeline] No roster data available');
+        container.innerHTML = `
+            <div class="empty-state glass-effect">
+                <div class="empty-icon">
+                    <i class="fas fa-stream"></i>
+                </div>
+                <h3>No timeline data available</h3>
+                <p>Load roster data to see the timeline view</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const groupedByDate = groupRosterByDate(currentRoster);
+    const dates = Object.keys(groupedByDate).sort();
+    console.log('[Timeline] Grouped dates:', dates.length);
+    
+    // Calculate timeline statistics
+    const timelineStats = calculateTimelineStats(groupedByDate);
+    
+    let html = `
+        <div class="timeline-container">
+            <!-- Timeline Header -->
+            <div class="timeline-header glass-effect">
+                <div class="timeline-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-calendar-week"></i>
+                        <span>${dates.length} Days</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-users"></i>
+                        <span>${timelineStats.totalDoctors} Doctors</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span>${timelineStats.totalShifts} Shifts</span>
+                    </div>
+                </div>
+                <div class="timeline-controls">
+                    <button class="timeline-btn" onclick="return scrollTimeline('start')" type="button">
+                        <i class="fas fa-angle-double-left"></i>
+                    </button>
+                    <button class="timeline-btn" onclick="return scrollTimeline('today')" type="button">
+                        <i class="fas fa-calendar-day"></i> Today
+                    </button>
+                    <button class="timeline-btn" onclick="return scrollTimeline('end')" type="button">
+                        <i class="fas fa-angle-double-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Timeline Content -->
+            <div class="timeline-wrapper" id="timelineWrapper">
+                <div class="timeline-track">
+    `;
+    
+    // Process each date
+    dates.forEach((date, index) => {
+        const entries = groupedByDate[date];
+        const dateObj = new Date(date);
+        const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+        const isToday = new Date().toDateString() === dateObj.toDateString();
+        
+        // Group by shift for this date
+        const shiftGroups = {
+            morning: entries.filter(e => e.shift === 'morning'),
+            evening: entries.filter(e => e.shift === 'evening'),
+            night: entries.filter(e => e.shift === 'night')
+        };
+        
+        html += `
+            <div class="timeline-day ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''}" 
+                 id="timeline-day-${index}" data-date="${date}">
+                <div class="timeline-date">
+                    <div class="date-badge ${isToday ? 'pulse' : ''}">
+                        <div class="day-num">${dateObj.getDate()}</div>
+                        <div class="day-info">
+                            <span class="day-name">${dateObj.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                            <span class="month-name">${dateObj.toLocaleDateString('en-US', { month: 'short' })}</span>
+                        </div>
+                    </div>
+                    ${isToday ? '<div class="today-indicator">TODAY</div>' : ''}
+                </div>
+                
+                <div class="timeline-content">
+        `;
+        
+        // Render shifts in timeline format
+        ['morning', 'evening', 'night'].forEach(shiftType => {
+            const shiftEntries = shiftGroups[shiftType];
+            if (shiftEntries.length > 0) {
+                html += `
+                    <div class="timeline-shift shift-${shiftType}">
+                        <div class="shift-time">
+                            <i class="fas fa-${getShiftIcon(shiftType)}"></i>
+                            <span>${getShiftTime(shiftType)}</span>
+                        </div>
+                        <div class="shift-doctors-timeline">
+                `;
+                
+                shiftEntries.forEach(entry => {
+                    const initials = entry.doctorName ? 
+                        entry.doctorName.replace('Dr. ', '').split(' ').map(n => n[0]).join('') : 'D';
+                    
+                    html += `
+                        <div class="doctor-timeline-chip ${entry.isReferralDuty ? 'referral' : ''}"
+                             title="${entry.doctorName}${entry.isReferralDuty ? ' (Referral Duty)' : ''}">
+                            <div class="doctor-avatar-timeline ${getRandomGradient()}">
+                                ${initials}
+                            </div>
+                            <div class="doctor-info-timeline">
+                                <span class="doctor-name">${entry.doctorName ? entry.doctorName.replace('Dr. ', '') : 'Unknown'}</span>
+                                ${entry.isReferralDuty ? '<span class="referral-badge">R</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        // Show if no shifts
+        if (entries.length === 0) {
+            html += `
+                <div class="timeline-empty">
+                    <i class="fas fa-calendar-times"></i>
+                    <span>No shifts</span>
+                </div>
+            `;
+        }
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+                </div>
+            </div>
+            
+            <!-- Timeline Navigation -->
+            <div class="timeline-nav glass-effect">
+                <div class="timeline-minimap" id="timelineMinimap">
+                    ${dates.map((date, index) => {
+                        const dateObj = new Date(date);
+                        const isToday = new Date().toDateString() === dateObj.toDateString();
+                        return `<div class="minimap-day ${isToday ? 'today' : ''}" 
+                                     onclick="return scrollToTimelineDay(${index})" 
+                                     title="${dateObj.toLocaleDateString()}"></div>`;
                     }).join('')}
                 </div>
             </div>
         </div>
     `;
-}
-
-// Interactive Functions
-function showNewConsultationForm() {
-    const form = document.getElementById('newConsultationForm');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-function hideNewConsultationForm() {
-    document.getElementById('newConsultationForm').style.display = 'none';
-}
-
-async function submitNewConsultation(event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const consultationData = Object.fromEntries(formData.entries());
-
-    try {
-        const response = await fetch('/api/consultations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(consultationData)
+    
+    container.innerHTML = html;
+    console.log('[Timeline] HTML set, container innerHTML length:', container.innerHTML.length);
+    console.log('[Timeline] Timeline days found:', document.querySelectorAll('.timeline-day').length);
+    
+    // Add animations with safeguard
+    const timelineDays = document.querySelectorAll('.timeline-day');
+    if (timelineDays.length > 0 && typeof gsap !== 'undefined') {
+        // Ensure timeline days are visible first
+        timelineDays.forEach(day => {
+            day.style.opacity = '1';
+            day.style.transform = 'translateX(0)';
         });
-
-        if (response.ok) {
-            showToast('Consultation request submitted successfully', 'success');
-            hideNewConsultationForm();
-            // Refresh the consultations
-            showConsults();
-        } else {
-            throw new Error('Failed to submit consultation');
-        }
-    } catch (error) {
-        console.error('Error submitting consultation:', error);
-        showToast('Failed to submit consultation request', 'error');
+        
+        // Then animate
+        gsap.fromTo('.timeline-day', 
+            {
+                x: -50,
+                opacity: 0
+            },
+            {
+                x: 0,
+                opacity: 1,
+                duration: 0.5,
+                stagger: 0.05,
+                ease: 'power2.out',
+                clearProps: 'all'
+            }
+        );
     }
+    
+    // Scroll to today if exists
+    setTimeout(() => {
+        const todayElement = document.querySelector('.timeline-day.today');
+        if (todayElement) {
+            todayElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+    }, 500);
 }
 
-async function updateConsultationStatus(consultationId, newStatus) {
-    try {
-        const response = await fetch(`/api/consultations/${consultationId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
+// Calculate timeline statistics
+function calculateTimelineStats(groupedByDate) {
+    const allDoctors = new Set();
+    let totalShifts = 0;
+    
+    Object.values(groupedByDate).forEach(entries => {
+        entries.forEach(entry => {
+            allDoctors.add(entry.doctorId);
+            totalShifts++;
         });
-
-        if (response.ok) {
-            showToast(`Consultation ${newStatus} successfully`, 'success');
-            // Refresh the consultations
-            showConsults();
-        } else {
-            throw new Error('Failed to update consultation');
-        }
-    } catch (error) {
-        console.error('Error updating consultation:', error);
-        showToast('Failed to update consultation status', 'error');
-    }
-}
-
-function switchConsultationTab(tabName) {
-    // Update tab buttons
-    document.querySelectorAll('.consultation-tabs .tab-btn').forEach(btn => {
-        btn.classList.remove('active');
     });
-    event.target.classList.add('active');
-
-    // Filter and display consultations
-    let filteredConsultations;
-    switch (tabName) {
-        case 'active':
-            filteredConsultations = globalConsultations.filter(c => ['pending', 'accepted'].includes(c.status));
-            break;
-        case 'completed':
-            filteredConsultations = globalConsultations.filter(c => c.status === 'completed');
-            break;
-        case 'all':
-        default:
-            filteredConsultations = globalConsultations;
-            break;
-    }
-
-    document.getElementById('consultationsList').innerHTML = renderConsultationsList(filteredConsultations, globalDoctors);
-}
-
-function switchReferralTab(tabName) {
-    // Update tab buttons
-    document.querySelectorAll('.referral-tabs .tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-
-    const contentDiv = document.getElementById('referralContent');
-
-    switch (tabName) {
-        case 'statistics':
-            const stats = calculateReferralStats(globalReferrals, globalDoctors);
-            contentDiv.innerHTML = renderReferralStatistics(stats);
-            break;
-        case 'active':
-            const activeReferrals = globalReferrals.filter(r => ['pending', 'in-transit'].includes(r.status));
-            contentDiv.innerHTML = `
-                <div class="referral-actions">
-                    <button class="add-referral-btn" onclick="showNewReferralForm()">
-                        <i class="fas fa-plus"></i>
-                        New Referral
-                    </button>
-                </div>
-                <div id="newReferralForm" class="new-referral-form glass-card" style="display: none;">
-                    ${renderNewReferralForm(globalDoctors)}
-                </div>
-                <div class="referrals-list">
-                    ${renderReferralsList(activeReferrals, globalDoctors)}
-                </div>
-            `;
-            break;
-        case 'completed':
-            const completedReferrals = globalReferrals.filter(r => r.status === 'completed');
-            contentDiv.innerHTML = `
-                <div class="referrals-list">
-                    ${renderReferralsList(completedReferrals, globalDoctors)}
-                </div>
-            `;
-            break;
-        case 'all':
-            contentDiv.innerHTML = `
-                <div class="referral-actions">
-                    <button class="add-referral-btn" onclick="showNewReferralForm()">
-                        <i class="fas fa-plus"></i>
-                        New Referral
-                    </button>
-                </div>
-                <div id="newReferralForm" class="new-referral-form glass-card" style="display: none;">
-                    ${renderNewReferralForm(globalDoctors)}
-                </div>
-                <div class="referrals-list">
-                    ${renderReferralsList(globalReferrals, globalDoctors)}
-                </div>
-            `;
-            break;
-    }
-}
-
-function renderNewReferralForm(doctors) {
-    // All doctors in the system are ER doctors (Emergency Medicine specialization)
-    const erDoctors = doctors || [];
-    const destinations = [
-        'King Faisal Specialist Hospital',
-        'National Guard Hospital',
-        'King Khalid University Hospital',
-        'Riyadh Care Hospital',
-        'King Saud Medical City',
-        'Prince Sultan Military Medical City',
-        'King Abdulaziz Medical City'
-    ];
-
-    return `
-        <h3>Log New Referral</h3>
-        <form onsubmit="submitNewReferral(event)">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Patient ID</label>
-                    <input type="text" name="patientId" placeholder="Enter patient ID" required>
-                </div>
-                <div class="form-group">
-                    <label>ER Doctor</label>
-                    <select name="erDoctorId" required>
-                        <option value="">Select ER Doctor</option>
-                        ${erDoctors.map(doctor => `<option value="${doctor.id}">${doctor.name}</option>`).join('')}
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Referral Type</label>
-                    <select name="referralType">
-                        <option value="emergency">Emergency</option>
-                        <option value="life-saving">Life-Saving</option>
-                        <option value="routine">Routine</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Urgency</label>
-                    <select name="urgency">
-                        <option value="immediate">Immediate</option>
-                        <option value="urgent">Urgent</option>
-                        <option value="routine">Routine</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Destination Hospital</label>
-                <select name="destination" required>
-                    <option value="">Select Destination</option>
-                    ${destinations.map(dest => `<option value="${dest}">${dest}</option>`).join('')}
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Clinical Notes</label>
-                <textarea name="notes" placeholder="Enter clinical details and reason for referral" rows="3"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-ambulance"></i>
-                    Log Referral
-                </button>
-                <button type="button" class="cancel-btn" onclick="hideNewReferralForm()">
-                    Cancel
-                </button>
-            </div>
-        </form>
-    `;
-}
-
-function renderReferralsList(referrals, doctors) {
-    if (referrals.length === 0) {
-        return '<div class="empty-state">No referrals found</div>';
-    }
-
-    return referrals.map(referral => `
-        <div class="referral-item glass-card">
-            <div class="referral-header">
-                <div class="referral-info">
-                    <div class="patient-id">Patient: ${referral.patientId}</div>
-                    <div class="type-badge" style="background-color: ${getReferralTypeColor(referral.referralType)}">
-                        <i class="${getReferralTypeIcon(referral.referralType)}"></i>
-                        ${referral.referralType.replace('-', ' ').toUpperCase()}
-                    </div>
-                    <div class="urgency-badge urgency-${referral.urgency}">
-                        ${referral.urgency.toUpperCase()}
-                    </div>
-                </div>
-                <div class="referral-status">
-                    <span class="status-badge status-${referral.status}">
-                        ${referral.status.toUpperCase().replace('-', ' ')}
-                    </span>
-                </div>
-            </div>
-            <div class="referral-details">
-                <div class="detail-row">
-                    <span class="label">ER Doctor:</span>
-                    <span class="value">${getERDoctorName(referral.erDoctorId)}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Destination:</span>
-                    <span class="value">${referral.destination}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Referral Time:</span>
-                    <span class="value">${formatTime(referral.referralTime)}</span>
-                </div>
-                ${referral.notes ? `
-                    <div class="detail-row">
-                        <span class="label">Notes:</span>
-                        <span class="value">${referral.notes}</span>
-                    </div>
-                ` : ''}
-                ${referral.outcome ? `
-                    <div class="detail-row">
-                        <span class="label">Outcome:</span>
-                        <span class="value">${referral.outcome}</span>
-                    </div>
-                ` : ''}
-            </div>
-            ${renderReferralActions(referral)}
-        </div>
-    `).join('');
-}
-
-function getReferralTypeColor(type) {
-    const colors = {
-        'emergency': '#ef4444',
-        'life-saving': '#dc2626',
-        'routine': '#10b981'
+    
+    return {
+        totalDoctors: allDoctors.size,
+        totalShifts: totalShifts
     };
-    return colors[type] || '#6b7280';
 }
 
-function getReferralTypeIcon(type) {
-    const icons = {
-        'emergency': 'fas fa-exclamation-triangle',
-        'life-saving': 'fas fa-heartbeat',
-        'routine': 'fas fa-clipboard-list'
+// Get shift time display
+function getShiftTime(shift) {
+    const times = {
+        morning: '7:00 AM - 3:00 PM',
+        evening: '3:00 PM - 11:00 PM',
+        night: '11:00 PM - 7:00 AM'
     };
-    return icons[type] || 'fas fa-clipboard-list';
+    return times[shift] || '';
 }
 
-function renderReferralActions(referral) {
-    if (['pending', 'in-transit'].includes(referral.status)) {
-        let actions = '';
-        if (referral.status === 'pending') {
-            actions += `
-                <button class="action-btn transit-btn" onclick="updateReferralStatus(${referral.id}, 'in-transit')">
-                    <i class="fas fa-truck"></i>
-                    Mark In Transit
-                </button>
-            `;
-        }
-        if (referral.status === 'in-transit') {
-            actions += `
-                <button class="action-btn complete-btn" onclick="updateReferralStatus(${referral.id}, 'completed')">
-                    <i class="fas fa-check-circle"></i>
-                    Mark Complete
-                </button>
-            `;
-        }
-        actions += `
-            <button class="action-btn cancel-btn" onclick="updateReferralStatus(${referral.id}, 'cancelled')">
-                <i class="fas fa-times"></i>
-                Cancel
-            </button>
-        `;
-        return `<div class="referral-actions">${actions}</div>`;
-    }
-    return '';
-}
-
-// Referral Interactive Functions
-function showNewReferralForm() {
-    const form = document.getElementById('newReferralForm');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-function hideNewReferralForm() {
-    document.getElementById('newReferralForm').style.display = 'none';
-}
-
-async function submitNewReferral(event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const referralData = Object.fromEntries(formData.entries());
-
-    try {
-        const response = await fetch('/api/referrals', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(referralData)
-        });
-
-        if (response.ok) {
-            showToast('Referral logged successfully', 'success');
-            hideNewReferralForm();
-            // Refresh the referrals
-            showReferrals();
-        } else {
-            throw new Error('Failed to log referral');
-        }
-    } catch (error) {
-        console.error('Error logging referral:', error);
-        showToast('Failed to log referral', 'error');
-    }
-}
-
-async function updateReferralStatus(referralId, newStatus) {
-    try {
-        const response = await fetch(`/api/referrals/${referralId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (response.ok) {
-            showToast(`Referral ${newStatus.replace('-', ' ')} successfully`, 'success');
-            // Refresh the referrals
-            showReferrals();
-        } else {
-            throw new Error('Failed to update referral');
-        }
-    } catch (error) {
-        console.error('Error updating referral:', error);
-        showToast('Failed to update referral status', 'error');
-    }
-}
-
-// Consultation Log Functions
-function renderConsultationLogModal(logs, doctors) {
-    const modalBody = document.getElementById('consultationLogModalBody');
-
-    const shifts = [
-        { value: 'morning', label: 'Morning (7:00 AM - 3:00 PM)' },
-        { value: 'evening', label: 'Evening (3:00 PM - 11:00 PM)' },
-        { value: 'night', label: 'Night (11:00 PM - 7:00 AM)' }
-    ];
-
-    const outcomes = [
-        { value: 'admitted', label: 'Admitted' },
-        { value: 'dama', label: 'Patient discharge against medical advice (DAMA)' },
-        { value: 'discharged_ama', label: 'Discharged against medical advice' },
-        { value: 'patient_referred', label: 'Patient referred' },
-        { value: 'other', label: 'Other' }
-    ];
-
-    const specialistsList = [
-        { id: 'fathi', name: 'Dr. Fathi', specialty: 'Internal Medicine' },
-        { id: 'joseph', name: 'Dr. Joseph', specialty: 'Orthopedics' },
-        { id: 'mahasen', name: 'Dr. Mahasen', specialty: 'ENT' },
-        { id: 'mahmoud', name: 'Dr. Mahmoud', specialty: 'Orthopedics' },
-        { id: 'mammoun', name: 'Dr. Mammoun', specialty: 'General Surgery' },
-        { id: 'renaldo', name: 'Dr. Renaldo', specialty: 'General Surgery' },
-        { id: 'yanelis', name: 'Dr. Yanelis', specialty: 'Ophthalmology' },
-        { id: 'asma', name: 'Dr. Asma', specialty: 'Obstetrics & Gynaecology' },
-        { id: 'abdulhakim', name: 'Dr. Abdulhakim', specialty: 'Pediatrics' },
-        { id: 'badawy_mahmoud', name: 'Dr. Badawy Mahmoud', specialty: 'Paediatrics' },
-        { id: 'badawy', name: 'Dr. Badawy', specialty: 'Dentist' }
-    ];
-
-    modalBody.innerHTML = `
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button class="action-btn add-btn" onclick="addNewConsultationLogRow()">
-                <i class="fas fa-plus"></i>
-                Add Row
-            </button>
-            <button class="action-btn save-btn" onclick="saveConsultationLog()">
-                <i class="fas fa-save"></i>
-                Save
-            </button>
-            <button class="action-btn clear-btn" onclick="clearConsultationLogForm()">
-                <i class="fas fa-eraser"></i>
-                Clear Form
-            </button>
-            <button class="action-btn export-btn" onclick="exportConsultationLog('csv')">
-                <i class="fas fa-file-csv"></i>
-                CSV
-            </button>
-            <button class="action-btn export-btn" onclick="exportConsultationLog('pdf')">
-                <i class="fas fa-file-pdf"></i>
-                PDF
-            </button>
-        </div>
-
-        <!-- Form Fields -->
-        <div class="consultation-form glass-card">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" id="logDate" value="${new Date().toISOString().split('T')[0]}" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Shift</label>
-                    <select id="logShift" required>
-                        <option value="">Select Shift</option>
-                        ${shifts.map(shift => `<option value="${shift.value}">${shift.label}</option>`).join('')}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>ER Doctor</label>
-                    <select id="logERDoctor" required>
-                        <option value="">Select ER Doctor</option>
-                        ${doctors.map(doctor => `<option value="${doctor.id}">${doctor.name}</option>`).join('')}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Time Called</label>
-                    <input type="time" id="logTimeCalled" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Specialist</label>
-                    <select id="logSpecialist" onchange="updateSpecialty()" required>
-                        <option value="">Select Specialist</option>
-                        ${specialistsList.map(specialist => `<option value="${specialist.id}" data-specialty="${specialist.specialty}">${specialist.name}</option>`).join('')}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Specialty</label>
-                    <input type="text" id="logSpecialty" readonly class="readonly-field" placeholder="Auto-populated">
-                </div>
-
-                <div class="form-group">
-                    <label>Arrival Time</label>
-                    <input type="time" id="logArrivalTime" onchange="calculateResponseTime()">
-                </div>
-
-                <div class="form-group">
-                    <label>Response Time</label>
-                    <input type="text" id="logResponseTime" readonly class="readonly-field" placeholder="Auto-calculated">
-                </div>
-
-                <div class="form-group">
-                    <label>Patient ID</label>
-                    <input type="text" id="logPatientId" placeholder="Patient ID" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Outcome</label>
-                    <select id="logOutcome" onchange="toggleOtherOutcome()" required>
-                        <option value="">Select</option>
-                        ${outcomes.map(outcome => `<option value="${outcome.value}">${outcome.label}</option>`).join('')}
-                    </select>
-                </div>
-
-                <div class="form-group" id="otherOutcomeGroup" style="display: none;">
-                    <label>Other Outcome (specify)</label>
-                    <input type="text" id="logOtherOutcome" placeholder="Please specify other outcome">
-                </div>
-
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="logUrgent">
-                        <span class="checkmark"></span>
-                        Urgent
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Data Table -->
-        <div class="consultation-table-container">
-            <div class="table-header">
-                <div>Date</div>
-                <div>Shift</div>
-                <div>ER Doctor</div>
-                <div>Time Called</div>
-                <div>Specialist</div>
-                <div>Specialty</div>
-                <div>Response</div>
-                <div>Arrival Time</div>
-                <div>Response Time</div>
-                <div>Patient ID</div>
-                <div>Outcome</div>
-                <div>Urgent</div>
-                <div>Actions</div>
-            </div>
-
-            <div class="table-body" id="consultationLogTableBody">
-                ${renderConsultationLogTable(logs, doctors, specialistsList, shifts, outcomes)}
-            </div>
-        </div>
-    `;
-}
-
-function renderConsultationLogTable(logs, doctors, specialists, shifts, outcomes) {
-    if (!logs || logs.length === 0) {
-        return '<div class="empty-state">No consultation logs found</div>';
-    }
-
-    return logs.map(log => {
-        const doctor = doctors.find(d => d.id === log.erDoctorId);
-        const specialist = specialists.find(s => s.id === log.specialistId);
-        const shift = shifts.find(s => s.value === log.shift);
-        const outcome = outcomes.find(o => o.value === log.outcome);
-
-        return `
-            <div class="table-row" data-log-id="${log.id}">
-                <div>${log.date}</div>
-                <div>${shift ? shift.label.split(' ')[0] : log.shift}</div>
-                <div>${doctor ? doctor.name : 'Unknown'}</div>
-                <div>${log.timeCalled}</div>
-                <div>${specialist ? specialist.name : 'Unknown'}</div>
-                <div>${log.specialty}</div>
-                <div>--:--</div>
-                <div>${log.arrivalTime || '--:--'}</div>
-                <div>${log.responseTime || '--'}</div>
-                <div>${log.patientId}</div>
-                <div>
-                    <span class="outcome-badge outcome-${log.outcome}">
-                        ${outcome ? outcome.label : log.outcome}
-                    </span>
-                </div>
-                <div>${log.urgent ? '✓' : ''}</div>
-                <div class="action-cell">
-                    <button class="edit-btn" onclick="editConsultationLog(${log.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="delete-btn" onclick="deleteConsultationLog(${log.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-// Consultation Log Interactive Functions
-function updateSpecialty() {
-    const specialistSelect = document.getElementById('logSpecialist');
-    const specialtyInput = document.getElementById('logSpecialty');
-    const selectedOption = specialistSelect.options[specialistSelect.selectedIndex];
-
-    if (selectedOption && selectedOption.dataset.specialty) {
-        specialtyInput.value = selectedOption.dataset.specialty;
-    } else {
-        specialtyInput.value = '';
-    }
-}
-
-function calculateResponseTime() {
-    const timeCalled = document.getElementById('logTimeCalled').value;
-    const arrivalTime = document.getElementById('logArrivalTime').value;
-    const responseTimeInput = document.getElementById('logResponseTime');
-
-    if (timeCalled && arrivalTime) {
-        const [calledHours, calledMinutes] = timeCalled.split(':').map(Number);
-        const [arrivalHours, arrivalMinutes] = arrivalTime.split(':').map(Number);
-
-        const calledTotalMinutes = calledHours * 60 + calledMinutes;
-        const arrivalTotalMinutes = arrivalHours * 60 + arrivalMinutes;
-
-        let diffMinutes = arrivalTotalMinutes - calledTotalMinutes;
-
-        // Handle next day scenario
-        if (diffMinutes < 0) {
-            diffMinutes += 24 * 60;
-        }
-
-        responseTimeInput.value = `${diffMinutes} min`;
-    } else {
-        responseTimeInput.value = '';
-    }
-}
-
-function toggleOtherOutcome() {
-    const outcomeSelect = document.getElementById('logOutcome');
-    const otherGroup = document.getElementById('otherOutcomeGroup');
-    const otherInput = document.getElementById('logOtherOutcome');
-
-    if (outcomeSelect.value === 'other') {
-        otherGroup.style.display = 'block';
-        otherInput.required = true;
-    } else {
-        otherGroup.style.display = 'none';
-        otherInput.required = false;
-        otherInput.value = '';
-    }
-}
-
-function addNewConsultationLogRow() {
-    clearConsultationLogForm();
-}
-
-function clearConsultationLogForm() {
-    document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('logShift').value = '';
-    document.getElementById('logERDoctor').value = '';
-    document.getElementById('logTimeCalled').value = '';
-    document.getElementById('logSpecialist').value = '';
-    document.getElementById('logSpecialty').value = '';
-    document.getElementById('logArrivalTime').value = '';
-    document.getElementById('logResponseTime').value = '';
-    document.getElementById('logPatientId').value = '';
-    document.getElementById('logOutcome').value = '';
-    document.getElementById('logOtherOutcome').value = '';
-    document.getElementById('logUrgent').checked = false;
-
-    // Hide the "Other" outcome field
-    document.getElementById('otherOutcomeGroup').style.display = 'none';
-    document.getElementById('logOtherOutcome').required = false;
-
-    // Remove any edit mode indicators
-    document.querySelectorAll('.table-row').forEach(row => row.classList.remove('editing'));
-}
-
-async function saveConsultationLog() {
-    const outcomeValue = document.getElementById('logOutcome').value;
-    const otherOutcome = document.getElementById('logOtherOutcome').value;
-
-    const logData = {
-        date: document.getElementById('logDate').value,
-        shift: document.getElementById('logShift').value,
-        erDoctorId: document.getElementById('logERDoctor').value,
-        timeCalled: document.getElementById('logTimeCalled').value,
-        specialistId: document.getElementById('logSpecialist').value,
-        specialty: document.getElementById('logSpecialty').value,
-        arrivalTime: document.getElementById('logArrivalTime').value,
-        responseTime: document.getElementById('logResponseTime').value,
-        patientId: document.getElementById('logPatientId').value,
-        outcome: outcomeValue === 'other' ? otherOutcome : outcomeValue,
-        urgent: document.getElementById('logUrgent').checked
-    };
-
-    // Validate required fields
-    const required = ['date', 'shift', 'erDoctorId', 'timeCalled', 'specialistId', 'patientId', 'outcome'];
-    for (let field of required) {
-        if (!logData[field]) {
-            showToast(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`, 'error');
-            return;
+// Scroll timeline controls
+window.scrollTimeline = function(position) {
+    const wrapper = document.getElementById('timelineWrapper');
+    if (!wrapper) return false;
+    
+    if (position === 'start') {
+        wrapper.scrollTo({ left: 0, behavior: 'smooth' });
+    } else if (position === 'end') {
+        wrapper.scrollTo({ left: wrapper.scrollWidth, behavior: 'smooth' });
+    } else if (position === 'today') {
+        const todayElement = document.querySelector('.timeline-day.today');
+        if (todayElement) {
+            todayElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
     }
+    return false;
+}
 
-    // Additional validation for "Other" outcome
-    if (outcomeValue === 'other' && !otherOutcome.trim()) {
-        showToast('Please specify the other outcome.', 'error');
+// Scroll to specific timeline day
+window.scrollToTimelineDay = function(index) {
+    const dayElement = document.getElementById(`timeline-day-${index}`);
+    if (dayElement) {
+        dayElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+    return false;
+}
+
+// Missing functions
+function refreshAnalytics() {
+    loadRosterData();
+}
+
+function showNotificationCenter() {
+    showToast('Notification center coming soon!', 'info');
+}
+
+// Add metric card styles
+const metricStyle = document.createElement('style');
+metricStyle.textContent = `
+    .metric-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .metric-card h6 {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    
+    .workload-chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    .consultation-table input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+`;
+document.head.appendChild(metricStyle);
+
+// Import Roster Functions
+let importedData = [];
+let importModal = null;
+
+function showImportRoster() {
+    if (!importModal) {
+        importModal = new bootstrap.Modal(document.getElementById('importRosterModal'));
+    }
+    
+    // Reset form
+    document.getElementById('importRosterForm').reset();
+    document.getElementById('importPreview').style.display = 'none';
+    document.getElementById('previewBtn').style.display = 'inline-block';
+    document.getElementById('importBtn').style.display = 'none';
+    
+    // Set default month to current
+    document.getElementById('importMonth').value = document.getElementById('monthYear').value;
+    
+    importModal.show();
+}
+
+function previewImport() {
+    const fileInput = document.getElementById('rosterFile');
+    const monthInput = document.getElementById('importMonth');
+    
+    if (!fileInput.files[0]) {
+        showToast('Please select a file', 'warning');
         return;
     }
-
-    try {
-        const response = await fetch('/api/consultation-logs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(logData)
-        });
-
-        if (response.ok) {
-            const newLog = await response.json();
-            showToast('Consultation log saved successfully', 'success');
-
-            // Add to global logs and refresh table
-            globalConsultationLogs.push(newLog);
-            refreshConsultationLogTable();
-            clearConsultationLogForm();
-        } else {
-            throw new Error('Failed to save consultation log');
-        }
-    } catch (error) {
-        console.error('Error saving consultation log:', error);
-        showToast('Failed to save consultation log', 'error');
-    }
-}
-
-function refreshConsultationLogTable() {
-    const tableBody = document.getElementById('consultationLogTableBody');
-    const shifts = [
-        { value: 'morning', label: 'Morning (7:00 AM - 3:00 PM)' },
-        { value: 'evening', label: 'Evening (3:00 PM - 11:00 PM)' },
-        { value: 'night', label: 'Night (11:00 PM - 7:00 AM)' }
-    ];
-    const outcomes = [
-        { value: 'admitted', label: 'Admitted' },
-        { value: 'dama', label: 'Patient discharge against medical advice (DAMA)' },
-        { value: 'discharged_ama', label: 'Discharged against medical advice' },
-        { value: 'patient_referred', label: 'Patient referred' },
-        { value: 'other', label: 'Other' }
-    ];
-    const specialistsList = [
-        { id: 'fathi', name: 'Dr. Fathi', specialty: 'Internal Medicine' },
-        { id: 'joseph', name: 'Dr. Joseph', specialty: 'Orthopedics' },
-        { id: 'mahasen', name: 'Dr. Mahasen', specialty: 'ENT' },
-        { id: 'mahmoud', name: 'Dr. Mahmoud', specialty: 'Orthopedics' },
-        { id: 'mammoun', name: 'Dr. Mammoun', specialty: 'General Surgery' },
-        { id: 'renaldo', name: 'Dr. Renaldo', specialty: 'General Surgery' },
-        { id: 'yanelis', name: 'Dr. Yanelis', specialty: 'Ophthalmology' },
-        { id: 'asma', name: 'Dr. Asma', specialty: 'Obstetrics & Gynaecology' },
-        { id: 'abdulhakim', name: 'Dr. Abdulhakim', specialty: 'Pediatrics' },
-        { id: 'badawy_mahmoud', name: 'Dr. Badawy Mahmoud', specialty: 'Paediatrics' },
-        { id: 'badawy', name: 'Dr. Badawy', specialty: 'Dentist' }
-    ];
-
-    tableBody.innerHTML = renderConsultationLogTable(globalConsultationLogs, globalDoctors, specialistsList, shifts, outcomes);
-}
-
-function editConsultationLog(logId) {
-    const log = globalConsultationLogs.find(l => l.id === logId);
-    if (!log) return;
-
-    // Check if outcome is a custom "other" value
-    const standardOutcomes = ['admitted', 'dama', 'discharged_ama', 'patient_referred'];
-    const isOtherOutcome = !standardOutcomes.includes(log.outcome);
-
-    // Populate form with log data
-    document.getElementById('logDate').value = log.date;
-    document.getElementById('logShift').value = log.shift;
-    document.getElementById('logERDoctor').value = log.erDoctorId;
-    document.getElementById('logTimeCalled').value = log.timeCalled;
-    document.getElementById('logSpecialist').value = log.specialistId;
-    document.getElementById('logSpecialty').value = log.specialty;
-    document.getElementById('logArrivalTime').value = log.arrivalTime || '';
-    document.getElementById('logResponseTime').value = log.responseTime || '';
-    document.getElementById('logPatientId').value = log.patientId;
-
-    if (isOtherOutcome) {
-        document.getElementById('logOutcome').value = 'other';
-        document.getElementById('logOtherOutcome').value = log.outcome;
-        toggleOtherOutcome(); // Show the other field
-    } else {
-        document.getElementById('logOutcome').value = log.outcome;
-        document.getElementById('logOtherOutcome').value = '';
-        toggleOtherOutcome(); // Hide the other field if not needed
-    }
-
-    document.getElementById('logUrgent').checked = log.urgent;
-
-    // Highlight the row being edited
-    document.querySelectorAll('.table-row').forEach(row => row.classList.remove('editing'));
-    document.querySelector(`[data-log-id="${logId}"]`).classList.add('editing');
-
-    // Store the ID for updating
-    document.getElementById('consultationLogModalBody').dataset.editingId = logId;
-}
-
-async function deleteConsultationLog(logId) {
-    if (!confirm('Are you sure you want to delete this consultation log entry?')) {
+    
+    if (!monthInput.value) {
+        showToast('Please select a month', 'warning');
         return;
     }
+    
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File size exceeds 5MB limit', 'danger');
+        return;
+    }
+    
+    reader.onload = function(e) {
+        try {
+            const data = e.target.result;
+            let parsedData = [];
+            
+            if (file.name.endsWith('.csv')) {
+                parsedData = parseCSV(data);
+            } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                parsedData = parseExcel(data);
+            } else {
+                showToast('Unsupported file format', 'danger');
+                return;
+            }
+            
+            if (parsedData.length === 0) {
+                showToast('No data found in file', 'warning');
+                return;
+            }
+            
+            // Validate and process data
+            const validated = validateRosterData(parsedData);
+            if (validated.errors.length > 0) {
+                showToast(`Validation errors: ${validated.errors.join(', ')}`, 'danger');
+                return;
+            }
+            
+            importedData = validated.data;
+            displayPreview(importedData);
+            
+        } catch (error) {
+            console.error('Error parsing file:', error);
+            showToast('Error parsing file: ' + error.message, 'danger');
+        }
+    };
+    
+    if (file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+    } else {
+        reader.readAsArrayBuffer(file);
+    }
+}
 
-    try {
-        const response = await fetch(`/api/consultation-logs/${logId}`, {
-            method: 'DELETE'
+function parseCSV(data) {
+    const lines = data.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const rows = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = values[index] || '';
         });
-
-        if (response.ok) {
-            showToast('Consultation log deleted successfully', 'success');
-
-            // Remove from global logs and refresh table
-            globalConsultationLogs = globalConsultationLogs.filter(l => l.id !== logId);
-            refreshConsultationLogTable();
-        } else {
-            throw new Error('Failed to delete consultation log');
-        }
-    } catch (error) {
-        console.error('Error deleting consultation log:', error);
-        showToast('Failed to delete consultation log', 'error');
+        rows.push(row);
     }
+    
+    return rows;
 }
 
-async function exportConsultationLog(format) {
-    try {
-        const response = await fetch(`/api/consultation-logs/export/${format}`);
-
-        if (format === 'csv') {
-            const csvContent = await response.text();
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'consultation-logs.csv';
-            a.click();
-            window.URL.revokeObjectURL(url);
-            showToast('CSV export completed', 'success');
-        } else if (format === 'pdf') {
-            const pdfData = await response.json();
-            // For PDF, you would typically use a library like jsPDF
-            console.log('PDF data:', pdfData);
-            showToast('PDF export data prepared (implement PDF generation)', 'info');
-        }
-    } catch (error) {
-        console.error('Error exporting consultation log:', error);
-        showToast('Failed to export consultation log', 'error');
+function parseExcel(data) {
+    const workbook = XLSX.read(data, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    
+    if (jsonData.length < 2) return [];
+    
+    const headers = jsonData[0].map(h => String(h).trim().toLowerCase());
+    const rows = [];
+    
+    for (let i = 1; i < jsonData.length; i++) {
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = jsonData[i][index] || '';
+        });
+        rows.push(row);
     }
+    
+    return rows;
 }
 
-// Saudi Red Crescent Functions
-function renderSaudiCrescentModal(records, doctors, ambulanceUnits) {
-    const modalBody = document.getElementById('saudiCrescentModalBody');
+function validateRosterData(data) {
+    const errors = [];
+    const validatedData = [];
+    const monthYear = document.getElementById('importMonth').value;
+    const [year, month] = monthYear.split('-');
+    
+    // Check required columns
+    const requiredColumns = ['date', 'doctor', 'shift'];
+    const columns = Object.keys(data[0] || {});
+    
+    // Map common column variations
+    const columnMappings = {
+        'doctor name': 'doctor',
+        'doctor_name': 'doctor',
+        'name': 'doctor',
+        'date': 'date',
+        'shift': 'shift',
+        'area': 'area',
+        'referral duty': 'referral_duty',
+        'referral': 'referral_duty'
+    };
+    
+    // Normalize column names
+    data = data.map(row => {
+        const normalizedRow = {};
+        Object.entries(row).forEach(([key, value]) => {
+            const normalizedKey = columnMappings[key.toLowerCase()] || key.toLowerCase();
+            normalizedRow[normalizedKey] = value;
+        });
+        return normalizedRow;
+    });
+    
+    // Validate required columns
+    const normalizedColumns = Object.keys(data[0] || {});
+    const missingColumns = requiredColumns.filter(col => !normalizedColumns.includes(col));
+    if (missingColumns.length > 0) {
+        errors.push(`Missing required columns: ${missingColumns.join(', ')}`);
+        return { data: [], errors };
+    }
+    
+    // Validate each row
+    data.forEach((row, index) => {
+        try {
+            // Parse date
+            let date = row.date;
+            if (!date) {
+                errors.push(`Row ${index + 2}: Missing date`);
+                return;
+            }
+            
+            // Handle different date formats
+            if (date.includes('/')) {
+                // DD/MM/YYYY format
+                const parts = date.split('/');
+                if (parts.length === 3) {
+                    date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            }
+            
+            // Ensure date is in correct month
+            const rowDate = new Date(date);
+            if (rowDate.getFullYear() !== parseInt(year) || rowDate.getMonth() + 1 !== parseInt(month)) {
+                // Skip rows not in selected month
+                return;
+            }
+            
+            // Validate doctor name
+            const doctorName = row.doctor?.trim();
+            if (!doctorName) {
+                errors.push(`Row ${index + 2}: Missing doctor name`);
+                return;
+            }
+            
+            // Validate shift
+            const shift = row.shift?.toLowerCase();
+            const validShifts = ['morning', 'evening', 'night'];
+            if (!validShifts.includes(shift)) {
+                errors.push(`Row ${index + 2}: Invalid shift '${row.shift}' (must be Morning, Evening, or Night)`);
+                return;
+            }
+            
+            validatedData.push({
+                date: date,
+                doctorName: doctorName,
+                shift: shift.charAt(0).toUpperCase() + shift.slice(1),
+                area: row.area || 'Main ER',
+                isReferralDuty: row.referral_duty?.toLowerCase() === 'yes' || row.referral_duty === '1' || row.referral_duty === true
+            });
+            
+        } catch (error) {
+            errors.push(`Row ${index + 2}: ${error.message}`);
+        }
+    });
+    
+    // Limit errors to first 5
+    if (errors.length > 5) {
+        errors.splice(5);
+        errors.push(`... and ${errors.length - 5} more errors`);
+    }
+    
+    return { data: validatedData, errors: errors.slice(0, 5) };
+}
 
-    modalBody.innerHTML = `
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button class="action-btn add-btn" onclick="addNewSaudiCrescentEntry()">
-                <i class="fas fa-plus"></i>
-                Add Entry
-            </button>
-            <button class="action-btn save-btn" onclick="saveSaudiCrescentRecord()">
-                <i class="fas fa-save"></i>
-                Save
-            </button>
-            <button class="action-btn clear-btn" onclick="clearSaudiCrescentForm()">
-                <i class="fas fa-eraser"></i>
-                Clear Form
-            </button>
-            <button class="action-btn export-btn" onclick="exportSaudiCrescentRecords('csv')">
-                <i class="fas fa-file-csv"></i>
-                CSV
-            </button>
-            <button class="action-btn export-btn" onclick="exportSaudiCrescentRecords('pdf')">
-                <i class="fas fa-file-pdf"></i>
-                PDF
-            </button>
-        </div>
-
-        <!-- Form Fields -->
-        <div class="saudi-crescent-form glass-card">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Patient ID</label>
-                    <input type="text" id="srcPatientId" placeholder="Patient ID" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Ambulance Unit</label>
-                    <select id="srcAmbulanceUnit" required>
-                        <option value="">Select Ambulance Unit</option>
-                        ${ambulanceUnits.map(unit => `<option value="${unit}">${unit}</option>`).join('')}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Receiving Doctor</label>
-                    <select id="srcReceivingDoctor" required>
-                        <option value="">Select Receiving Doctor</option>
-                        ${doctors.map(doctor => `<option value="${doctor.id}">${doctor.name}</option>`).join('')}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Time Received</label>
-                    <input type="time" id="srcTimeReceived" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Handover Time</label>
-                    <input type="time" id="srcHandoverTime" onchange="calculateHandoverDuration()">
-                </div>
-
-                <div class="form-group">
-                    <label>Duration</label>
-                    <input type="text" id="srcDuration" readonly class="readonly-field" placeholder="Auto-calculated">
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Additional Notes</label>
-                    <textarea id="srcAdditionalNotes" rows="3" placeholder="Any special notes about the patient transfer or condition"></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Data Table -->
-        <div class="saudi-crescent-table-container">
-            <div class="table-header">
-                <div>Date</div>
-                <div>Time Received</div>
-                <div>Case Type</div>
-                <div>Patient Details</div>
-                <div>Receiving Doctor</div>
-                <div>Handover Time</div>
-                <div>Duration (min)</div>
-                <div>Notes</div>
-                <div>Actions</div>
-            </div>
-
-            <div class="table-body" id="saudiCrescentTableBody">
-                ${renderSaudiCrescentTable(records, doctors, ambulanceUnits)}
-            </div>
-        </div>
-
-        <!-- Handover Statistics -->
-        <div class="handover-statistics glass-card">
-            <h3>Handover Statistics</h3>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-label">Average Handover Time:</span>
-                    <span class="stat-value" id="avgHandoverTime">0 min</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Total Cases Today:</span>
-                    <span class="stat-value" id="totalCasesToday">0</span>
-                </div>
-            </div>
+function displayPreview(data) {
+    const previewDiv = document.getElementById('importPreview');
+    const previewTable = document.getElementById('previewTable');
+    const thead = previewTable.querySelector('thead');
+    const tbody = previewTable.querySelector('tbody');
+    
+    // Clear previous content
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+    
+    // Create header
+    thead.innerHTML = `
+        <tr>
+            <th>Date</th>
+            <th>Doctor</th>
+            <th>Shift</th>
+            <th>Area</th>
+            <th>Referral Duty</th>
+        </tr>
+    `;
+    
+    // Show first 5 rows
+    const previewData = data.slice(0, 5);
+    previewData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${new Date(row.date).toLocaleDateString()}</td>
+            <td>${row.doctorName}</td>
+            <td>${row.shift}</td>
+            <td>${row.area}</td>
+            <td>${row.isReferralDuty ? 'Yes' : 'No'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    // Show statistics
+    const stats = document.getElementById('importStats');
+    const shiftCounts = data.reduce((acc, row) => {
+        acc[row.shift] = (acc[row.shift] || 0) + 1;
+        return acc;
+    }, {});
+    
+    const uniqueDoctors = [...new Set(data.map(row => row.doctorName))];
+    const referralDuties = data.filter(row => row.isReferralDuty).length;
+    
+    stats.innerHTML = `
+        <div class="alert alert-success">
+            <strong>Import Summary:</strong>
+            <ul class="mb-0 mt-2">
+                <li>Total entries: ${data.length}</li>
+                <li>Unique doctors: ${uniqueDoctors.length}</li>
+                <li>Morning shifts: ${shiftCounts.Morning || 0}</li>
+                <li>Evening shifts: ${shiftCounts.Evening || 0}</li>
+                <li>Night shifts: ${shiftCounts.Night || 0}</li>
+                <li>Referral duties: ${referralDuties}</li>
+            </ul>
         </div>
     `;
-
-    // Update statistics
-    updateSaudiCrescentStatistics(records);
+    
+    previewDiv.style.display = 'block';
+    document.getElementById('previewBtn').style.display = 'none';
+    document.getElementById('importBtn').style.display = 'inline-block';
 }
 
-function renderSaudiCrescentTable(records, doctors, ambulanceUnits) {
-    if (!records || records.length === 0) {
-        return '<div class="empty-state">No Saudi Red Crescent records found</div>';
-    }
-
-    return records.map(record => {
-        const doctor = doctors.find(d => d.id === record.receivingDoctorId);
-        const recordDate = new Date(record.createdAt).toLocaleDateString();
-
-        return `
-            <div class="table-row" data-record-id="${record.id}">
-                <div>${recordDate}</div>
-                <div>${record.timeReceived}</div>
-                <div>Emergency</div>
-                <div>${record.patientId}</div>
-                <div>${doctor ? doctor.name : 'Unknown'}</div>
-                <div>${record.handoverTime || '--:--'}</div>
-                <div>${record.duration || '--'}</div>
-                <div class="notes-cell" title="${record.additionalNotes}">${record.additionalNotes.substring(0, 30)}${record.additionalNotes.length > 30 ? '...' : ''}</div>
-                <div class="action-cell">
-                    <button class="edit-btn" onclick="editSaudiCrescentRecord(${record.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="delete-btn" onclick="deleteSaudiCrescentRecord(${record.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-// Saudi Red Crescent Interactive Functions
-function calculateHandoverDuration() {
-    const timeReceived = document.getElementById('srcTimeReceived').value;
-    const handoverTime = document.getElementById('srcHandoverTime').value;
-    const durationInput = document.getElementById('srcDuration');
-
-    if (timeReceived && handoverTime) {
-        const [receivedHours, receivedMinutes] = timeReceived.split(':').map(Number);
-        const [handoverHours, handoverMinutes] = handoverTime.split(':').map(Number);
-
-        const receivedTotalMinutes = receivedHours * 60 + receivedMinutes;
-        const handoverTotalMinutes = handoverHours * 60 + handoverMinutes;
-
-        let diffMinutes = handoverTotalMinutes - receivedTotalMinutes;
-
-        // Handle next day scenario
-        if (diffMinutes < 0) {
-            diffMinutes += 24 * 60;
-        }
-
-        durationInput.value = `${diffMinutes} min`;
-    } else {
-        durationInput.value = '';
-    }
-}
-
-function addNewSaudiCrescentEntry() {
-    clearSaudiCrescentForm();
-}
-
-function clearSaudiCrescentForm() {
-    document.getElementById('srcPatientId').value = '';
-    document.getElementById('srcAmbulanceUnit').value = '';
-    document.getElementById('srcReceivingDoctor').value = '';
-    document.getElementById('srcTimeReceived').value = '';
-    document.getElementById('srcHandoverTime').value = '';
-    document.getElementById('srcDuration').value = '';
-    document.getElementById('srcAdditionalNotes').value = '';
-
-    // Remove any edit mode indicators
-    document.querySelectorAll('.table-row').forEach(row => row.classList.remove('editing'));
-}
-
-async function saveSaudiCrescentRecord() {
-    const recordData = {
-        patientId: document.getElementById('srcPatientId').value,
-        ambulanceUnit: document.getElementById('srcAmbulanceUnit').value,
-        receivingDoctorId: document.getElementById('srcReceivingDoctor').value,
-        timeReceived: document.getElementById('srcTimeReceived').value,
-        handoverTime: document.getElementById('srcHandoverTime').value,
-        duration: document.getElementById('srcDuration').value,
-        additionalNotes: document.getElementById('srcAdditionalNotes').value
-    };
-
-    // Validate required fields
-    const required = ['patientId', 'ambulanceUnit', 'receivingDoctorId', 'timeReceived'];
-    for (let field of required) {
-        if (!recordData[field]) {
-            showToast(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`, 'error');
-            return;
-        }
-    }
-
-    try {
-        const response = await fetch('/api/saudi-crescent', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(recordData)
-        });
-
-        if (response.ok) {
-            const newRecord = await response.json();
-            showToast('Saudi Red Crescent record saved successfully', 'success');
-
-            // Add to global records and refresh table
-            globalSaudiCrescentRecords.push(newRecord);
-            refreshSaudiCrescentTable();
-            clearSaudiCrescentForm();
-            updateSaudiCrescentStatistics(globalSaudiCrescentRecords);
-        } else {
-            throw new Error('Failed to save Saudi Red Crescent record');
-        }
-    } catch (error) {
-        console.error('Error saving Saudi Red Crescent record:', error);
-        showToast('Failed to save Saudi Red Crescent record', 'error');
-    }
-}
-
-function refreshSaudiCrescentTable() {
-    const tableBody = document.getElementById('saudiCrescentTableBody');
-    tableBody.innerHTML = renderSaudiCrescentTable(globalSaudiCrescentRecords, globalDoctors, globalAmbulanceUnits);
-}
-
-function editSaudiCrescentRecord(recordId) {
-    const record = globalSaudiCrescentRecords.find(r => r.id === recordId);
-    if (!record) return;
-
-    // Populate form with record data
-    document.getElementById('srcPatientId').value = record.patientId;
-    document.getElementById('srcAmbulanceUnit').value = record.ambulanceUnit;
-    document.getElementById('srcReceivingDoctor').value = record.receivingDoctorId;
-    document.getElementById('srcTimeReceived').value = record.timeReceived;
-    document.getElementById('srcHandoverTime').value = record.handoverTime || '';
-    document.getElementById('srcDuration').value = record.duration || '';
-    document.getElementById('srcAdditionalNotes').value = record.additionalNotes || '';
-
-    // Highlight the row being edited
-    document.querySelectorAll('.table-row').forEach(row => row.classList.remove('editing'));
-    document.querySelector(`[data-record-id="${recordId}"]`).classList.add('editing');
-
-    // Store the ID for updating
-    document.getElementById('saudiCrescentModalBody').dataset.editingId = recordId;
-}
-
-async function deleteSaudiCrescentRecord(recordId) {
-    if (!confirm('Are you sure you want to delete this Saudi Red Crescent record?')) {
+function confirmImport() {
+    if (importedData.length === 0) {
+        showToast('No data to import', 'warning');
         return;
     }
-
-    try {
-        const response = await fetch(`/api/saudi-crescent/${recordId}`, {
-            method: 'DELETE'
-        });
-
-        if (response.ok) {
-            showToast('Saudi Red Crescent record deleted successfully', 'success');
-
-            // Remove from global records and refresh table
-            globalSaudiCrescentRecords = globalSaudiCrescentRecords.filter(r => r.id !== recordId);
-            refreshSaudiCrescentTable();
-            updateSaudiCrescentStatistics(globalSaudiCrescentRecords);
+    
+    const monthYear = document.getElementById('importMonth').value;
+    const replaceExisting = document.getElementById('replaceExisting').checked;
+    
+    // Show loading
+    const importBtn = document.getElementById('importBtn');
+    importBtn.disabled = true;
+    importBtn.querySelector('.btn-loader').style.display = 'inline-block';
+    
+    // Prepare data for API
+    const [year, month] = monthYear.split('-');
+    const requestData = {
+        year: parseInt(year),
+        month: parseInt(month),
+        replaceExisting: replaceExisting,
+        entries: importedData
+    };
+    
+    // Send to API
+    fetch('/api/roster/import', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`Successfully imported ${data.imported} roster entries`, 'success');
+            importModal.hide();
+            
+            // Reload roster if same month
+            if (monthYear === document.getElementById('monthYear').value) {
+                loadRosterData();
+            }
         } else {
-            throw new Error('Failed to delete Saudi Red Crescent record');
+            showToast(data.message || 'Import failed', 'danger');
         }
-    } catch (error) {
-        console.error('Error deleting Saudi Red Crescent record:', error);
-        showToast('Failed to delete Saudi Red Crescent record', 'error');
-    }
-}
-
-async function exportSaudiCrescentRecords(format) {
-    try {
-        const response = await fetch(`/api/saudi-crescent/export/${format}`);
-
-        if (format === 'csv') {
-            const csvContent = await response.text();
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'saudi-crescent-records.csv';
-            a.click();
-            window.URL.revokeObjectURL(url);
-            showToast('CSV export completed', 'success');
-        } else if (format === 'pdf') {
-            const pdfData = await response.json();
-            console.log('PDF data:', pdfData);
-            showToast('PDF export data prepared (implement PDF generation)', 'info');
-        }
-    } catch (error) {
-        console.error('Error exporting Saudi Red Crescent records:', error);
-        showToast('Failed to export Saudi Red Crescent records', 'error');
-    }
-}
-
-function updateSaudiCrescentStatistics(records) {
-    // Calculate average handover time
-    const recordsWithDuration = records.filter(r => r.duration && r.duration !== '');
-    let avgTime = 0;
-    if (recordsWithDuration.length > 0) {
-        const totalMinutes = recordsWithDuration.reduce((sum, record) => {
-            const minutes = parseInt(record.duration.replace(' min', ''));
-            return sum + (isNaN(minutes) ? 0 : minutes);
-        }, 0);
-        avgTime = Math.round(totalMinutes / recordsWithDuration.length);
-    }
-
-    // Calculate today's records
-    const today = new Date().toISOString().split('T')[0];
-    const todaysRecords = records.filter(record => {
-        const recordDate = new Date(record.createdAt).toISOString().split('T')[0];
-        return recordDate === today;
+    })
+    .catch(error => {
+        console.error('Import error:', error);
+        showToast('Error importing roster data', 'danger');
+    })
+    .finally(() => {
+        importBtn.disabled = false;
+        importBtn.querySelector('.btn-loader').style.display = 'none';
     });
+}
 
-    // Update UI
-    const avgElement = document.getElementById('avgHandoverTime');
-    const totalElement = document.getElementById('totalCasesToday');
-
-    if (avgElement) avgElement.textContent = `${avgTime} min`;
-    if (totalElement) totalElement.textContent = todaysRecords.length;
+// Download Roster Template
+function downloadRosterTemplate(format) {
+    try {
+        // Hide any previous error messages
+        const errorDiv = document.getElementById('templateError');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+        
+        // Simple direct download for both formats
+        const url = `/api/roster/template/download?format=${format}`;
+        
+        // Create a temporary anchor element and trigger download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = format === 'csv' ? 'roster-template.csv' : 'roster-template.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        showToast(`Downloading ${format.toUpperCase()} template...`, 'info');
+        
+    } catch (error) {
+        console.error('Template download error:', error);
+        showToast('Error downloading template', 'danger');
+        
+        // Show error message in modal
+        const errorDiv = document.getElementById('templateError');
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+        }
+    }
 }

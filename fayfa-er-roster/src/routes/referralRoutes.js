@@ -1,18 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const Referral = require('../models/Referral');
+const referralController = require('../controllers/referralController');
 
+// Controller-based routes (prioritized)
 // Get all referrals
-router.get('/', (req, res) => {
-  try {
-    const referrals = Referral.getAll();
-    res.json(referrals);
-  } catch (error) {
-    console.error('Error fetching referrals:', error);
-    res.status(500).json({ error: 'Failed to fetch referrals' });
-  }
-});
+router.get('/', referralController.getAllReferrals);
 
+// Get referrals by month
+router.get('/month/:year/:month', referralController.getReferralsByMonth);
+
+// Get referral statistics by month
+router.get('/stats/:year/:month', referralController.getReferralStats);
+
+// Get referrals by doctor
+router.get('/doctor/:doctorId', referralController.getReferralsByDoctor);
+
+// Additional direct routes for specific functionality
 // Get referral by ID
 router.get('/:id', (req, res) => {
   try {
@@ -60,17 +64,6 @@ router.get('/urgency/:urgency', (req, res) => {
   }
 });
 
-// Get referrals by ER doctor
-router.get('/doctor/:doctorId', (req, res) => {
-  try {
-    const referrals = Referral.getByERDoctor(req.params.doctorId);
-    res.json(referrals);
-  } catch (error) {
-    console.error('Error fetching referrals by doctor:', error);
-    res.status(500).json({ error: 'Failed to fetch referrals by doctor' });
-  }
-});
-
 // Get active referrals
 router.get('/filter/active', (req, res) => {
   try {
@@ -93,7 +86,7 @@ router.get('/filter/today', (req, res) => {
   }
 });
 
-// Get referral statistics
+// Get referral statistics overview
 router.get('/stats/overview', (req, res) => {
   try {
     const stats = Referral.getReferralStats();
@@ -116,68 +109,12 @@ router.get('/stats/trends', (req, res) => {
 });
 
 // Create new referral
-router.post('/', (req, res) => {
-  try {
-    const { patientId, erDoctorId, referralType, destination, urgency, notes } = req.body;
-    
-    // Validate required fields
-    if (!patientId || !erDoctorId || !referralType || !destination) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: patientId, erDoctorId, referralType, and destination are required' 
-      });
-    }
-
-    const referralData = {
-      patientId,
-      erDoctorId: parseInt(erDoctorId),
-      referralType,
-      destination,
-      urgency: urgency || 'urgent',
-      notes: notes || '',
-      referralTime: new Date().toISOString()
-    };
-
-    const referral = Referral.add(referralData);
-    res.status(201).json(referral);
-  } catch (error) {
-    console.error('Error creating referral:', error);
-    res.status(500).json({ error: 'Failed to create referral' });
-  }
-});
+router.post('/', referralController.createReferral);
 
 // Update referral
-router.put('/:id', (req, res) => {
-  try {
-    const referralId = req.params.id;
-    const updates = req.body;
-
-    const updatedReferral = Referral.update(referralId, updates);
-    
-    if (!updatedReferral) {
-      return res.status(404).json({ error: 'Referral not found' });
-    }
-
-    res.json(updatedReferral);
-  } catch (error) {
-    console.error('Error updating referral:', error);
-    res.status(500).json({ error: 'Failed to update referral' });
-  }
-});
+router.put('/:id', referralController.updateReferral);
 
 // Delete referral
-router.delete('/:id', (req, res) => {
-  try {
-    const deletedReferral = Referral.delete(req.params.id);
-    
-    if (!deletedReferral) {
-      return res.status(404).json({ error: 'Referral not found' });
-    }
-
-    res.json({ message: 'Referral deleted successfully', referral: deletedReferral });
-  } catch (error) {
-    console.error('Error deleting referral:', error);
-    res.status(500).json({ error: 'Failed to delete referral' });
-  }
-});
+router.delete('/:id', referralController.deleteReferral);
 
 module.exports = router;
