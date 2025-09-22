@@ -4871,3 +4871,34 @@ body:not(.dark-mode) .saudi-crescent-modal {
     padding: 8px 4px !important;
 }
 
+/* Dashboard Container Layout - Fixed after merge */
+.dashboard-container {
+    min-height: 100vh !important;
+    background: var(--bg-primary) !important;
+    display: block !important;
+    width: 100% !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.dashboard-grid {
+    display: flex !important;
+    min-height: 100vh !important;
+    width: 100% !important;
+    position: relative !important;
+}
+
+/* Ensure proper layout flow */
+.dashboard-container .dashboard-grid {
+    align-items: stretch !important;
+}
+
+/* Dark mode support for new containers */
+body.dark-mode .dashboard-container {
+    background: var(--bg-dark-primary) !important;
+}
+
+body.dark-mode .dashboard-grid {
+    background: transparent !important;
+}
+
