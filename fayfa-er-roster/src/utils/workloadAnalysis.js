@@ -5,9 +5,9 @@ class WorkloadAnalysis {
   
   // Shift duration mapping (in hours)
   static SHIFT_HOURS = {
-    morning: 8,   // 6AM - 2PM
-    evening: 8,   // 2PM - 10PM  
-    night: 8      // 10PM - 6AM
+    morning: 8,   // 7AM - 3PM
+    evening: 8,   // 3PM - 11PM
+    night: 8      // 11PM - 7AM
   };
 
   // Night shift weight (nights are more taxing)

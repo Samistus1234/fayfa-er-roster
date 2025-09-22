@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Mode Test</title>
+    <link href="/css/dashboard.css" rel="stylesheet">
+    <style>
+        .test-container {
+            padding: 20px;
+            margin: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="gradient-bg"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h1>Dark Mode Test Page</h1>
+        
+        <div class="test-section">
+            <h2>Theme Toggle Test</h2>
+            <button onclick="toggleTestTheme()" class="btn btn-primary">Toggle Dark Mode</button>
+            <div id="themeStatus" class="status info mt-3">Current theme: Light</div>
+        </div>
+        
+        <div class="test-section glass-effect">
+            <h3>Glass Effect Test</h3>
+            <p>This section should have a glass effect that changes in dark mode.</p>
+        </div>
+        
+        <div class="test-section">
+            <h3>CSS Variables Check</h3>
+            <div id="cssVarsStatus"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Background Check</h3>
+            <div id="bgStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTestTheme() {
+            const body = document.body;
+            const isDark = body.classList.toggle('dark-mode');
+            
+            // Update status
+            document.getElementById('themeStatus').textContent = `Current theme: ${isDark ? 'Dark' : 'Light'}`;
+            document.getElementById('themeStatus').className = `status ${isDark ? 'success' : 'info'} mt-3`;
+            
+            // Check CSS variables
+            checkCSSVariables();
+            
+            // Check backgrounds
+            checkBackgrounds();
+        }
+        
+        function checkCSSVariables() {
+            const computedStyle = getComputedStyle(document.documentElement);
+            const varsToCheck = ['--dark-bg-primary', '--dark-text-primary', '--glass-bg'];
+            
+            let html = '<h4>CSS Variables:</h4><ul>';
+            varsToCheck.forEach(varName => {
+                const value = computedStyle.getPropertyValue(varName);
+                html += `<li><strong>${varName}:</strong> ${value || 'Not defined'}</li>`;
+            });
+            html += '</ul>';
+            
+            document.getElementById('cssVarsStatus').innerHTML = html;
+        }
+        
+        function checkBackgrounds() {
+            const body = document.body;
+            const animatedBg = document.querySelector('.animated-bg');
+            const gradientBg = document.querySelector('.gradient-bg');
+            
+            let html = '<h4>Background Elements:</h4><ul>';
+            
+            // Check body background
+            const bodyBg = getComputedStyle(body).backgroundColor;
+            html += `<li><strong>Body background:</strong> ${bodyBg}</li>`;
+            
+            // Check animated bg
+            if (animatedBg) {
+                const display = getComputedStyle(animatedBg).display;
+                const visibility = getComputedStyle(animatedBg).visibility;
+                html += `<li><strong>Animated BG:</strong> display=${display}, visibility=${visibility}</li>`;
+            }
+            
+            // Check gradient bg
+            if (gradientBg) {
+                const opacity = getComputedStyle(gradientBg).opacity;
+                const background = getComputedStyle(gradientBg).background;
+                html += `<li><strong>Gradient BG:</strong> opacity=${opacity}, bg=${background.substring(0, 50)}...</li>`;
+            }
+            
+            html += '</ul>';
+            
+            document.getElementById('bgStatus').innerHTML = html;
+        }
+        
+        // Initial check
+        checkCSSVariables();
+        checkBackgrounds();
+        
+        // Check if theme is already dark
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeStatus').textContent = 'Current theme: Dark';
+            document.getElementById('themeStatus').className = 'status success mt-3';
+        }
+    </script>
+</body>
+</html>

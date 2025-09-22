@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Specialists Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Specialists Display Diagnostic</h1>
+    
+    <div class="test-section">
+        <h2>1. API Endpoint Test</h2>
+        <button onclick="testAPI()">Test API Endpoint</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. DOM Elements Check</h2>
+        <button onclick="checkDOM()">Check DOM Elements</button>
+        <div id="domResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. JavaScript Function Test</h2>
+        <button onclick="testJSFunctions()">Test JS Functions</button>
+        <div id="jsResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Full Dashboard Load Test</h2>
+        <button onclick="testDashboard()">Load Dashboard in iFrame</button>
+        <div id="dashboardResult"></div>
+        <iframe id="dashboardFrame" style="width: 100%; height: 600px; border: 1px solid #ccc; margin-top: 10px; display: none;"></iframe>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<div class="status info">Testing API...</div>';
+            
+            try {
+                const response = await fetch('/api/roster/specialists/today');
+                const data = await response.json();
+                
+                let html = '<div class="status success">API Response Received</div>';
+                html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.success && data.data) {
+                    html += '<div class="status info">';
+                    html += `Total specialists on call: ${data.data.totalOnCall}<br>`;
+                    html += `On-call period: ${data.data.onCallPeriod}`;
+                    html += '</div>';
+                }
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">API Error: ${error.message}</div>`;
+            }
+        }
+        
+        function checkDOM() {
+            const resultDiv = document.getElementById('domResult');
+            let html = '<div class="status info">Checking main dashboard page...</div>';
+            
+            // We'll check the main dashboard in the iframe
+            const iframe = document.getElementById('dashboardFrame');
+            iframe.style.display = 'block';
+            iframe.src = '/';
+            
+            iframe.onload = function() {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                
+                const elements = {
+                    'Analytics Content': doc.getElementById('analyticsContent'),
+                    'Specialists Card': doc.getElementById('specialistsToday'),
+                    'Specialists Count': doc.getElementById('specialistsTodayCount'),
+                    'Specialists Preview': doc.getElementById('specialistsPreview')
+                };
+                
+                html += '<h3>DOM Elements Found:</h3>';
+                for (const [name, element] of Object.entries(elements)) {
+                    if (element) {
+                        html += `<div class="status success">✓ ${name} found</div>`;
+                        if (element.textContent) {
+                            html += `<pre>Content: ${element.textContent.trim().substring(0, 100)}...</pre>`;
+                        }
+                    } else {
+                        html += `<div class="status error">✗ ${name} NOT found</div>`;
+                    }
+                }
+                
+                // Check if loadSpecialistsToday is being called
+                if (iframe.contentWindow.loadSpecialistsToday) {
+                    html += '<div class="status success">✓ loadSpecialistsToday function exists</div>';
+                } else {
+                    html += '<div class="status error">✗ loadSpecialistsToday function NOT found</div>';
+                }
+                
+                resultDiv.innerHTML = html;
+            };
+        }
+        
+        async function testJSFunctions() {
+            const resultDiv = document.getElementById('jsResult');
+            let html = '<div class="status info">Testing JavaScript functions...</div>';
+            
+            // Test if we can call the update function directly
+            try {
+                // Simulate the updateSpecialistsDisplay function
+                const testData = {
+                    totalOnCall: 4,
+                    specialists: [
+                        {name: 'Dr. Test', department: 'Surgery'},
+                        {name: 'Dr. Demo', department: 'Medicine'}
+                    ]
+                };
+                
+                html += '<div class="status success">✓ Test data created</div>';
+                html += '<pre>' + JSON.stringify(testData, null, 2) + '</pre>';
+                
+                // Check console for any errors
+                html += '<div class="status info">Check browser console for any JavaScript errors</div>';
+                
+            } catch (error) {
+                html += `<div class="status error">Error: ${error.message}</div>`;
+            }
+            
+            resultDiv.innerHTML = html;
+        }
+        
+        function testDashboard() {
+            const iframe = document.getElementById('dashboardFrame');
+            iframe.style.display = 'block';
+            iframe.src = '/';
+            
+            document.getElementById('dashboardResult').innerHTML = 
+                '<div class="status info">Dashboard loaded in iframe below. Check the Analytics Overview section for the Specialists card.</div>';
+        }
+        
+        // Run API test on load
+        window.onload = () => {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

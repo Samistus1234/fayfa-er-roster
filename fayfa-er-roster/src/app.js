@@ -9,6 +9,12 @@ const rosterRoutes = require('./routes/rosterRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const workloadRoutes = require('./routes/workloadRoutes');
 const fairnessRoutes = require('./routes/fairnessRoutes');
+const consultationRoutes = require('./routes/consultationRoutes');
+const referralRoutes = require('./routes/referralRoutes');
+const consultationLogRoutes = require('./routes/consultationLogRoutes');
+const saudiCrescentRoutes = require('./routes/saudiCrescentRoutes');
+const medicalLicenseRoutes = require('./routes/medicalLicenseRoutes');
+const exportRoutes = require('./routes/exportRoutes');
 
 // Initialize notification scheduler
 require('./utils/notificationScheduler');
@@ -24,24 +30,29 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: [
-        "'self'", 
-        "'unsafe-inline'", 
+        "'self'",
+        "'unsafe-inline'",
         "'unsafe-eval'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com"
       ],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: [
-        "'self'", 
-        "'unsafe-inline'", 
+        "'self'",
+        "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
-        "https://cdnjs.cloudflare.com"
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.googleapis.com"
       ],
       fontSrc: [
-        "'self'", 
-        "https://cdnjs.cloudflare.com"
+        "'self'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.gstatic.com",
+        "data:"
       ],
       imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
     },
   },
 }));
@@ -50,6 +61,8 @@ app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+// Serve node_modules for PDF libraries
+app.use('/node_modules', express.static(path.join(__dirname, '../node_modules')));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
@@ -59,12 +72,18 @@ app.use('/api/roster', rosterRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/workload', workloadRoutes);
 app.use('/api/fairness', fairnessRoutes);
+app.use('/api/consultations', consultationRoutes);
+app.use('/api/referrals', referralRoutes);
+app.use('/api/consultation-logs', consultationLogRoutes);
+app.use('/api/saudi-crescent', saudiCrescentRoutes);
+app.use('/api/medical-licenses', medicalLicenseRoutes);
+app.use('/api/export', exportRoutes);
 
 app.get('/', (req, res) => {
   res.render('dashboard', { hospital: 'Fayfa General Hospital' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3006;
 const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 
 console.log('Starting server...');

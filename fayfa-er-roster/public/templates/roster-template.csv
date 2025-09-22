@@ -1,0 +1,13 @@
+Date,Doctor Name,Shift,Area,Referral Duty
+2025-07-01,Dr. Ahmed Ali,Morning,Main ER,No
+2025-07-01,Dr. Sarah Johnson,Evening,Main ER,Yes
+2025-07-01,Dr. Mohammed Hassan,Night,Main ER,No
+2025-07-02,Dr. Fatima Abdullah,Morning,Main ER,No
+2025-07-02,Dr. John Smith,Evening,Main ER,No
+2025-07-02,Dr. Ahmed Ali,Night,Main ER,Yes
+2025-07-03,Dr. Sarah Johnson,Morning,Main ER,No
+2025-07-03,Dr. Mohammed Hassan,Evening,Main ER,No
+2025-07-03,Dr. Fatima Abdullah,Night,Main ER,No
+2025-07-04,Dr. John Smith,Morning,Main ER,Yes
+2025-07-04,Dr. Ahmed Ali,Evening,Main ER,No
+2025-07-04,Dr. Sarah Johnson,Night,Main ER,No

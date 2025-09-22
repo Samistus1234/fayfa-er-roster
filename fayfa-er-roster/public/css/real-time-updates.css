@@ -1,0 +1,136 @@
+/* Real-time updates styles */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-right: 12px;
+}
+
+.connection-status.connected {
+    background: rgba(32, 227, 178, 0.1);
+    color: #20E3B2;
+    border: 1px solid rgba(32, 227, 178, 0.2);
+}
+
+.connection-status.disconnected {
+    background: rgba(255, 193, 7, 0.1);
+    color: #FFC107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.connection-status.error {
+    background: rgba(255, 82, 82, 0.1);
+    color: #FF5252;
+    border: 1px solid rgba(255, 82, 82, 0.2);
+}
+
+.connection-status i {
+    font-size: 0.875rem;
+}
+
+/* Update animation for stats */
+.updating {
+    animation: pulse-update 0.6s ease-in-out;
+}
+
+@keyframes pulse-update {
+    0% {
+        transform: scale(1);
+        color: white;
+    }
+    50% {
+        transform: scale(1.1);
+        color: #20E3B2;
+    }
+    100% {
+        transform: scale(1);
+        color: white;
+    }
+}
+
+/* Real-time notification styles */
+.real-time-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 350px;
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+}
+
+.real-time-notification.info {
+    border-left: 4px solid #0093E9;
+}
+
+.real-time-notification.success {
+    border-left: 4px solid #20E3B2;
+}
+
+.real-time-notification.warning {
+    border-left: 4px solid #FFC107;
+}
+
+.real-time-notification.error {
+    border-left: 4px solid #FF5252;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Dark mode support */
+body.dark-mode .connection-status.connected {
+    background: rgba(32, 227, 178, 0.2);
+}
+
+body.dark-mode .connection-status.disconnected {
+    background: rgba(255, 193, 7, 0.2);
+}
+
+body.dark-mode .connection-status.error {
+    background: rgba(255, 82, 82, 0.2);
+}
+
+body.dark-mode .real-time-notification {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .connection-status {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        margin-right: 8px;
+    }
+    
+    .connection-status span {
+        display: none;
+    }
+    
+    .real-time-notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}

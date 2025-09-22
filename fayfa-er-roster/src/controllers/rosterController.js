@@ -15,7 +15,20 @@ const rosterController = {
     try {
       const { year, month } = req.params;
       const roster = Roster.getByMonth(parseInt(year), parseInt(month));
-      res.json({ success: true, data: roster });
+
+      // Add doctor name resolution
+      const doctors = Doctor.getAll();
+      const rosterWithNames = roster.map(shift => {
+        if (!shift.doctorName && shift.doctorId) {
+          const doctor = doctors.find(d => d.id === shift.doctorId);
+          if (doctor) {
+            shift.doctorName = doctor.name;
+          }
+        }
+        return shift;
+      });
+
+      res.json({ success: true, data: rosterWithNames });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }

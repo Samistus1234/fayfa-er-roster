@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Specialists API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        button {
+            padding: 10px 20px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Specialists API</h1>
+    
+    <button onclick="testSpecialistsAPI()">Test /api/roster/specialists/today</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function testSpecialistsAPI() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<div class="result">Loading...</div>';
+                
+                // Test the API endpoint
+                const response = await fetch('/api/roster/specialists/today');
+                const data = await response.json();
+                
+                // Display the result
+                let html = '<div class="result success">';
+                html += `<strong>Status:</strong> ${response.status} ${response.statusText}\n\n`;
+                html += '<strong>Response:</strong>\n';
+                html += JSON.stringify(data, null, 2);
+                html += '</div>';
+                
+                // Also test if specialists exist
+                if (data.success && data.data) {
+                    html += '<div class="result">';
+                    html += `<strong>Total Specialists On Call:</strong> ${data.data.totalOnCall || 0}\n`;
+                    html += `<strong>Date:</strong> ${data.data.date}\n`;
+                    html += `<strong>On-Call Period:</strong> ${data.data.onCallPeriod}\n\n`;
+                    
+                    if (data.data.specialists && data.data.specialists.length > 0) {
+                        html += '<strong>Specialists:</strong>\n';
+                        data.data.specialists.forEach(spec => {
+                            html += `- ${spec.name} (${spec.department}) - Phone: ${spec.phone}\n`;
+                        });
+                    } else {
+                        html += '<strong>No specialists found in the response</strong>\n';
+                    }
+                    html += '</div>';
+                }
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">
+<strong>Error:</strong> ${error.message}
+<strong>Stack:</strong> ${error.stack}
+</div>`;
+            }
+        }
+        
+        // Test on page load
+        window.onload = () => {
+            testSpecialistsAPI();
+        };
+    </script>
+</body>
+</html>

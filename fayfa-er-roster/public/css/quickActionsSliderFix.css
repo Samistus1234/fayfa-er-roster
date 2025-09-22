@@ -1,0 +1,47 @@
+
+/* Quick Actions Slider/Scrollbar Fix */
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    max-height: 400px;
+    overflow-y: scroll !important; /* Force scrolling */
+    padding-right: 10px; /* Space for scrollbar */
+}
+
+/* Custom scrollbar for a better look */
+.quick-actions-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.quick-actions-grid::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.quick-actions-grid::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.7);
+    border-radius: 4px;
+}
+
+.quick-actions-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.9);
+}
+
+/* Dark mode scrollbar */
+body.dark-mode .quick-actions-grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+body.dark-mode .quick-actions-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+        max-height: 300px;
+    }
+}

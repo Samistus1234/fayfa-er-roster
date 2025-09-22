@@ -3,312 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= hospital %> - ER Roster Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/dashboard.css" rel="stylesheet">
+    <title>Fayfa General Hospital - ER Roster Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome - Using only jsdelivr CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" crossorigin="anonymous">
+
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/dateConsultationModal.css">
+
+    <style>
+        /* Emergency CSS to ensure visibility */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+            background: #f0f4f8 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+        .main-container {
+            display: flex !important;
+            min-height: 100vh !important;
+            width: 100% !important;
+            position: relative !important;
+        }
+        .sidebar-modern {
+            width: 280px !important;
+            background: white !important;
+            border-right: 1px solid #e2e8f0 !important;
+            position: fixed !important;
+            height: 100vh !important;
+            overflow-y: auto !important;
+            z-index: 1000 !important;
+            left: 0 !important;
+            top: 0 !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        .main-content {
+            margin-left: 280px !important;
+            flex: 1 !important;
+            background: #f0f4f8 !important;
+            width: calc(100% - 280px) !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+        .navbar-modern {
+            display: block !important;
+            visibility: visible !important;
+            background: white !important;
+            padding: 1rem 2rem !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+        .sidebar-section {
+            display: block !important;
+            visibility: visible !important;
+            padding: 1.5rem !important;
+        }
+        .quick-actions-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.75rem !important;
+        }
+        .action-card {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            padding: 1rem !important;
+            background: white !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+        }
+        .stats-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 1rem !important;
+        }
+        /* Force Font Awesome icons to show */
+        .fas, .far, .fab {
+            font-family: "Font Awesome 6 Free", "FontAwesome", sans-serif !important;
+            font-weight: 900 !important;
+            display: inline-block !important;
+        }
+
+        /* Fallback for missing icons */
+        .fas::before, .far::before, .fab::before {
+            content: "●" !important;
+        }
+
+        /* Specific icon fallbacks */
+        .fa-hospital-user::before { content: "🏥" !important; }
+        .fa-calendar-alt::before { content: "📅" !important; }
+        .fa-sun::before { content: "☀️" !important; }
+        .fa-cloud-sun::before { content: "🌤️" !important; }
+        .fa-moon::before { content: "🌙" !important; }
+        .fa-user-md::before { content: "👨‍⚕️" !important; }
+        .fa-search::before { content: "🔍" !important; }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-hospital-user me-2"></i>
-                <%= hospital %>
-            </a>
-            <span class="navbar-text">ER Roster Management</span>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="gradient-bg"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
         </div>
-    </nav>
+    </div>
 
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-calendar-alt me-2"></i>Month Selection</h5>
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar-modern">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center">
+                    <div class="brand-icon">
+                        <i class="fas fa-hospital-user"></i>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="monthYear" class="form-label">Select Month/Year:</label>
-                            <input type="month" class="form-control" id="monthYear" value="2025-06">
-                        </div>
-                        <button class="btn btn-primary w-100" onclick="loadRosterData()">
-                            <i class="fas fa-sync-alt me-2"></i>Load Roster
-                        </button>
+                    <div class="ms-3">
+                        <h5 class="sidebar-title">Fayfa General Hospital</h5>
+                        <p class="sidebar-subtitle">Emergency Room Management</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h5><i class="fas fa-user-md me-2"></i>Quick Actions</h5>
+            <!-- Period Selection -->
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    PERIOD SELECTION
+                </div>
+                <div class="glass-effect main-card" style="padding: 1.5rem;">
+                    <div class="modern-input-group">
+                        <input type="month" class="modern-input glass-input" id="monthYear" value="2025-06">
                     </div>
-                    <div class="card-body">
-                        <button class="btn btn-success w-100 mb-2" onclick="showAddDoctorModal()">
-                            <i class="fas fa-plus me-2"></i>Add Doctor
-                        </button>
-                        <button class="btn btn-info w-100 mb-2" onclick="showAddRosterModal()">
-                            <i class="fas fa-calendar-plus me-2"></i>Add Roster Entry
-                        </button>
-                        <div class="dropdown mb-2">
-                            <button class="btn btn-warning dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-bell me-2"></i>Notifications
-                            </button>
-                            <ul class="dropdown-menu w-100">
-                                <li><a class="dropdown-item" href="#" onclick="loadNotifications()">
-                                    <i class="fas fa-eye me-2"></i>View Upcoming
-                                </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="createTestDuties()">
-                                    <i class="fas fa-plus-circle me-2"></i>Create Test Duties
-                                </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="forceCheckNotifications()">
-                                    <i class="fas fa-sync-alt me-2"></i>Check Now
-                                </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="sendTestNotification()">
-                                    <i class="fas fa-paper-plane me-2"></i>Send Test Email
-                                </a></li>
-                            </ul>
+                    <button class="modern-btn primary-btn glass-btn w-100 mt-3" onclick="loadRosterData()">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        <span>Load Roster</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <i class="fas fa-bolt"></i>
+                    QUICK ACTIONS
+                </div>
+                <div class="quick-actions-grid">
+                    <div class="action-card" onclick="showConsults()">
+                        <div class="action-icon" style="background: var(--info-gradient);">
+                            <i class="fas fa-user-md"></i>
                         </div>
-                        <button class="btn btn-secondary w-100 mb-2" onclick="showWorkloadAnalysis()">
-                            <i class="fas fa-chart-line me-2"></i>Workload Analysis
+                        <div class="action-title">Consults</div>
+                    </div>
+                    <div class="action-card" onclick="showReferrals()">
+                        <div class="action-icon" style="background: var(--success-gradient);">
+                            <i class="fas fa-ambulance"></i>
+                        </div>
+                        <div class="action-title">Referrals</div>
+                    </div>
+                    <div class="action-card" onclick="try { showConsultationLog(); } catch(e) { console.error('Primary function failed:', e); window.emergencyShowConsultationLog(); }">
+                        <div class="action-icon" style="background: var(--warning-gradient);">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="action-title">Consultation Log</div>
+                    </div>
+                    <div class="action-card" onclick="showSaudiCrescent()">
+                        <div class="action-icon" style="background: var(--danger-gradient);">
+                            <i class="fas fa-crescent-moon"></i>
+                        </div>
+                        <div class="action-title">Saudi Crescent</div>
+                    </div>
+                    <div class="action-card" onclick="openLicenseCenter()">
+                        <div class="action-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <div class="action-title">License Center</div>
+                    </div>
+                    <div class="action-card" onclick="openDataImporter()">
+                        <div class="action-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <div class="action-title">Data Import</div>
+                    </div>
+                    <div class="action-card" onclick="openExportHub()">
+                        <div class="action-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="action-title">Export Hub</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <i class="fas fa-chart-bar"></i>
+                    QUICK STATS
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="activeDoctorsCount">10</div>
+                        <div class="stat-label">Active Doctors</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalShiftsCount">114</div>
+                        <div class="stat-label">Total Shifts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgWorkloadCount">15</div>
+                        <div class="stat-label">Avg Workload</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navbar -->
+            <div class="navbar-modern">
+                <div class="navbar-content">
+                    <!-- Search -->
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="globalSearch" placeholder="Search doctors, shifts, or dates...">
+                        <div class="search-shortcut">⌘K</div>
+                    </div>
+
+                    <!-- Right Side -->
+                    <div class="navbar-nav-modern">
+                        <!-- Specialists Available Today -->
+                        <div class="specialists-indicator" onclick="showSpecialistsDetails()">
+                            <i class="fas fa-user-md"></i>
+                            <span id="specialistsTodayCount">3</span>
+                        </div>
+
+                        <!-- Theme Toggle -->
+                        <button class="theme-toggle" id="lightModeBtn" onclick="setLightMode()">
+                            <i class="fas fa-sun"></i>
                         </button>
-                        <button class="btn btn-dark w-100 mb-2" onclick="showFairnessMetrics()">
-                            <i class="fas fa-balance-scale me-2"></i>Fairness Metrics
+                        <button class="theme-toggle" id="darkModeBtn" onclick="setDarkMode()">
+                            <i class="fas fa-moon"></i>
                         </button>
-                        <button class="btn btn-danger w-100 mb-2" onclick="showConsultationLog()">
-                            <i class="fas fa-user-md me-2"></i>Consultation Log
-                        </button>
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-download me-2"></i>Export Data
-                            </button>
-                            <ul class="dropdown-menu w-100">
-                                <li><h6 class="dropdown-header">Analytics</h6></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportAnalytics('csv')"><i class="fas fa-file-csv me-2"></i>Analytics CSV</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportAnalytics('pdf')"><i class="fas fa-file-pdf me-2"></i>Analytics PDF</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Roster</h6></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportRoster('csv')"><i class="fas fa-file-csv me-2"></i>Roster CSV</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportRoster('pdf')"><i class="fas fa-file-pdf me-2"></i>Roster PDF</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Analysis</h6></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportWorkload('csv')"><i class="fas fa-file-csv me-2"></i>Workload CSV</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportWorkload('pdf')"><i class="fas fa-file-pdf me-2"></i>Workload PDF</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportFairness('csv')"><i class="fas fa-file-csv me-2"></i>Fairness CSV</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportFairness('pdf')"><i class="fas fa-file-pdf me-2"></i>Fairness PDF</a></li>
-                            </ul>
+
+                        <!-- User Menu -->
+                        <div class="user-menu">
+                            <div class="user-avatar">Ad</div>
+                            <div class="user-info">
+                                <h6>Admin</h6>
+                                <small>Administrator</small>
+                            </div>
+                            <i class="fas fa-chevron-down"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-9">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5><i class="fas fa-chart-bar me-2"></i>Duty Analytics Dashboard</h5>
-                                <div class="d-flex align-items-center">
-                                    <div class="btn-group me-2" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="exportAnalytics('csv')" title="Export to CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="exportAnalytics('pdf')" title="Export to PDF">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </button>
-                                    </div>
-                                    <span id="currentMonth" class="badge bg-secondary"></span>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="analyticsContent" class="row">
-                                    <div class="col-12 text-center text-muted">
-                                        <i class="fas fa-chart-pie fa-3x mb-3"></i>
-                                        <p>Select a month to view analytics</p>
-                                    </div>
-                                </div>
-                            </div>
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Stats Cards -->
+                <div class="stats-cards-row">
+                    <div class="stat-card glass-effect">
+                        <div class="stat-icon" style="background: var(--primary-gradient);">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalShiftsDisplay">114</div>
+                            <div class="stat-label">Total Shifts</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-effect">
+                        <div class="stat-icon" style="background: var(--success-gradient);">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="activeDoctorsDisplay">10</div>
+                            <div class="stat-label">Active Doctors</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-effect">
+                        <div class="stat-icon" style="background: var(--warning-gradient);">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="referralDutiesDisplay">33</div>
+                            <div class="stat-label">Referral Duties</div>
+                            <div class="stat-percentage">22%</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-effect">
+                        <div class="stat-icon" style="background: var(--info-gradient);">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="specialistsAvailableDisplay">3</div>
+                            <div class="stat-label">Specialists Available Today</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5><i class="fas fa-calendar-week me-2"></i>Monthly Roster</h5>
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-sm btn-outline-light" onclick="exportRoster('csv')" title="Export to CSV">
-                                        <i class="fas fa-file-csv"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-light" onclick="exportRoster('pdf')" title="Export to PDF">
-                                        <i class="fas fa-file-pdf"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="rosterContent">
-                                    <div class="text-center text-muted">
-                                        <i class="fas fa-calendar fa-3x mb-3"></i>
-                                        <p>Select a month to view roster details</p>
-                                    </div>
-                                </div>
+                <!-- Monthly Roster Calendar -->
+                <div class="roster-section glass-effect">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            MONTHLY ROSTER
+                        </div>
+                        <div class="section-actions">
+                            <div class="roster-info">
+                                <span><i class="fas fa-calendar-day"></i> <span id="monthDays">30</span> Days</span>
+                                <span><i class="fas fa-clock"></i> <span id="totalShiftsInfo">147</span> Total Shifts</span>
+                                <span><i class="fas fa-users"></i> <span id="activeDoctorsInfo">10</span> Active Doctors</span>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Workload Analysis Section -->
-                <div class="row mt-4" id="workloadSection" style="display: none;">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5><i class="fas fa-chart-line me-2"></i>Workload Distribution Analysis</h5>
-                                <div class="d-flex align-items-center">
-                                    <div class="btn-group me-2" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="exportWorkload('csv')" title="Export to CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="exportWorkload('pdf')" title="Export to PDF">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </button>
-                                    </div>
-                                    <button class="btn btn-sm btn-outline-light" onclick="hideWorkloadAnalysis()">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="workloadContent">
-                                    <div class="text-center text-muted">
-                                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
-                                        <p>Loading workload analysis...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    
+                    <!-- Calendar Grid -->
+                    <div class="calendar-container" id="calendarContainer">
+                        <!-- Calendar will be populated by JavaScript -->
                     </div>
-                </div>
 
-                <!-- Fairness Metrics Section -->
-                <div class="row mt-4" id="fairnessSection" style="display: none;">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5><i class="fas fa-balance-scale me-2"></i>Fairness & Equity Metrics Dashboard</h5>
-                                <div class="d-flex align-items-center">
-                                    <div class="btn-group me-2" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="exportFairness('csv')" title="Export to CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="exportFairness('pdf')" title="Export to PDF">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </button>
-                                    </div>
-                                    <button class="btn btn-sm btn-outline-light" onclick="hideFairnessMetrics()">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="fairnessContent">
-                                    <div class="text-center text-muted">
-                                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
-                                        <p>Loading fairness analysis...</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Shift Legend -->
+                    <div class="shift-legend glass-effect" style="margin-top: 1rem; padding: 1rem;">
+                        <div class="legend-title">
+                            <i class="fas fa-clock"></i>
+                            <span>Shift Schedule</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Consultation Log Section -->
-                <div class="row mt-4" id="consultationSection" style="display: none;">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center consultation-header">
-                                <div>
-                                    <h4 class="text-white mb-0"><i class="fas fa-user-md me-2"></i>Emergency Room Specialist Consultation Log</h4>
-                                    <small class="text-light">Track specialist responses and consultation times</small>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <span class="text-light me-3">Form ID: ERL-001 | Version: 1.0</span>
-                                    <button class="btn btn-sm btn-outline-light" onclick="hideConsultationLog()">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <div class="shift-indicator morning"></div>
+                                <span>Morning: 7:00 AM - 3:00 PM</span>
                             </div>
-                            <div class="card-body">
-                                <div id="consultationContent">
-                                    <!-- Meta Information Section -->
-                                    <div class="consultation-meta mb-4">
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <label for="consultDate" class="form-label">Date</label>
-                                                <input type="date" class="form-control" id="consultDate" required>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="consultShift" class="form-label">Shift</label>
-                                                <select class="form-control" id="consultShift" required>
-                                                    <option value="">Select Shift</option>
-                                                    <option value="Day 7AM-3PM">Day 7AM-3PM</option>
-                                                    <option value="Evening 3PM-11PM">Evening 3PM-11PM</option>
-                                                    <option value="Night 11PM-7AM">Night 11PM-7AM</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="erDoctor" class="form-label">ER Doctor on Duty</label>
-                                                <input type="text" class="form-control" id="erDoctor" placeholder="Dr. Name" required>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="recordedBy" class="form-label">Recorded By</label>
-                                                <input type="text" class="form-control" id="recordedBy" placeholder="Staff Name/ID" required>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Action Buttons -->
-                                    <div class="consultation-actions mb-3">
-                                        <button class="btn btn-success btn-sm" onclick="addConsultationRow()">
-                                            <i class="fas fa-plus me-2"></i>Add Row
-                                        </button>
-                                        <button class="btn btn-primary btn-sm" onclick="saveConsultationLog()">
-                                            <i class="fas fa-save me-2"></i>Save
-                                        </button>
-                                        <button class="btn btn-secondary btn-sm" onclick="clearConsultationForm()">
-                                            <i class="fas fa-eraser me-2"></i>Clear Form
-                                        </button>
-                                        <div class="btn-group ms-2" role="group">
-                                            <button type="button" class="btn btn-sm btn-info" onclick="exportConsultation('csv')" title="Export to CSV">
-                                                <i class="fas fa-file-csv me-1"></i>CSV
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-info" onclick="exportConsultation('pdf')" title="Export to PDF">
-                                                <i class="fas fa-file-pdf me-1"></i>PDF
-                                            </button>
-                                        </div>
-                                        <span id="lastSaved" class="ms-3 text-muted"></span>
-                                    </div>
-
-                                    <!-- Consultation Table -->
-                                    <div class="table-responsive">
-                                        <table class="table consultation-table" id="consultationTable">
-                                            <thead class="table-dark sticky-header">
-                                                <tr>
-                                                    <th>Time Called</th>
-                                                    <th>Specialist Name</th>
-                                                    <th>Specialty</th>
-                                                    <th>Response</th>
-                                                    <th>Arrival Time</th>
-                                                    <th>Patient ID</th>
-                                                    <th>Reason for Consult</th>
-                                                    <th>Urgent</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="consultationTableBody">
-                                                <!-- Rows will be generated by JavaScript -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                            <div class="legend-item">
+                                <div class="shift-indicator evening"></div>
+                                <span>Evening: 3:00 PM - 11:00 PM</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="shift-indicator night"></div>
+                                <span>Night: 11:00 PM - 7:00 AM</span>
                             </div>
                         </div>
                     </div>
@@ -317,93 +362,205 @@
         </div>
     </div>
 
-    <!-- Add Doctor Modal -->
-    <div class="modal fade" id="addDoctorModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New Doctor</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Consultation Modal -->
+    <div id="consultationModal" class="modal-overlay" style="display: none;">
+        <div class="consultation-modal glass-card">
+            <div class="modal-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div>
+                        <h2>Consultation Management</h2>
+                        <p>Track specialist responses and manage consultation requests</p>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <form id="addDoctorForm">
-                        <div class="mb-3">
-                            <label for="doctorName" class="form-label">Doctor Name</label>
-                            <input type="text" class="form-control" id="doctorName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="doctorEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="doctorEmail" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="doctorPhone" class="form-label">Phone</label>
-                            <input type="tel" class="form-control" id="doctorPhone" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="doctorSpecialization" class="form-label">Specialization</label>
-                            <select class="form-control" id="doctorSpecialization" required>
-                                <option value="Emergency Medicine">Emergency Medicine</option>
-                                <option value="Internal Medicine">Internal Medicine</option>
-                                <option value="Surgery">Surgery</option>
-                                <option value="Pediatrics">Pediatrics</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addDoctor()">Add Doctor</button>
-                </div>
+                <button class="close-btn" onclick="closeConsultationModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="consultationModalBody">
+                <!-- Content will be loaded dynamically -->
             </div>
         </div>
     </div>
 
-    <!-- Add Roster Modal -->
-    <div class="modal fade" id="addRosterModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Roster Entry</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Referral Modal -->
+    <div id="referralModal" class="modal-overlay" style="display: none;">
+        <div class="referral-modal glass-card">
+            <div class="modal-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-ambulance"></i>
+                    </div>
+                    <div>
+                        <h2>Referral Management</h2>
+                        <p>Track emergency and life-saving referrals</p>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <form id="addRosterForm">
-                        <div class="mb-3">
-                            <label for="rosterDoctor" class="form-label">Doctor</label>
-                            <select class="form-control" id="rosterDoctor" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="rosterShift" class="form-label">Shift</label>
-                            <select class="form-control" id="rosterShift" required>
-                                <option value="morning">Morning (6AM - 2PM)</option>
-                                <option value="evening">Evening (2PM - 10PM)</option>
-                                <option value="night">Night (10PM - 6AM)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="rosterDate" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="rosterDate" required>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="isReferralDuty">
-                            <label class="form-check-label" for="isReferralDuty">
-                                Referral Duty
-                            </label>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addRosterEntry()">Add Entry</button>
-                </div>
+                <button class="close-btn" onclick="closeReferralModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="referralModalBody">
+                <!-- Content will be loaded dynamically -->
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    <script src="/js/exportUtils.js"></script>
+    <!-- Consultation Log Modal -->
+    <div id="consultationLogModal" class="modal-overlay" style="display: none;">
+        <div class="consultation-log-modal glass-card">
+            <div class="modal-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div>
+                        <h2>CONSULTATION LOG</h2>
+                        <p>Track specialist responses</p>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeConsultationLogModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="consultationLogModalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Saudi Red Crescent Modal -->
+    <div id="saudiCrescentModal" class="modal-overlay" style="display: none;">
+        <div class="saudi-crescent-modal glass-card">
+            <div class="modal-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-crescent-moon"></i>
+                    </div>
+                    <div>
+                        <h2>SAUDI RED CRESCENT</h2>
+                        <p>Track ambulance referrals and handover times</p>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeSaudiCrescentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="saudiCrescentModalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- License Center Modal -->
+    <div id="licenseCenterModal" class="modal-overlay" style="display: none;">
+        <div class="license-center-modal glass-card">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div>
+                        <h2>LICENSE CENTER</h2>
+                        <p>Manage professional credentials and certifications</p>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeLicenseCenter()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="licenseCenterBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+
+<!-- Export Hub Modal -->
+<div id="exportHubModal" class="modal-overlay" style="display: none;">
+    <div class="export-hub-modal glass-card">
+        <div class="modal-header" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="fas fa-download"></i>
+                </div>
+                <div>
+                    <h2>EXPORT HUB</h2>
+                    <p>Download data, analytics, and comprehensive reports</p>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeExportHub()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="exportHubBody">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Data Import Modal -->
+<div id="dataImportModal" class="modal-overlay" style="display: none;">
+    <div class="data-import-modal glass-card">
+        <div class="modal-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="fas fa-upload"></i>
+                </div>
+                <div>
+                    <h2>DATA IMPORT</h2>
+                    <p>Upload and import roster data, staff info, and configurations</p>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeDataImporter()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="dataImportBody">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- PDF Generation Libraries - Locally Installed -->
+<script src="/node_modules/jspdf/dist/jspdf.umd.min.js"></script>
+<script src="/node_modules/html2canvas/dist/html2canvas.min.js"></script>
+
+<script>
+// Verify PDF libraries are loaded
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const jsPDFAvailable = typeof window.jsPDF !== 'undefined';
+        const html2canvasAvailable = typeof window.html2canvas !== 'undefined';
+
+        if (jsPDFAvailable && html2canvasAvailable) {
+            console.log('✅ PDF generation libraries loaded successfully from local installation!');
+            window.pdfLibrariesReady = true;
+        } else {
+            console.error('❌ PDF libraries not available:', {
+                jsPDF: jsPDFAvailable,
+                html2canvas: html2canvasAvailable
+            });
+            window.pdfLibrariesReady = false;
+        }
+    }, 100);
+});
+</script>
+
+    <!-- Custom JavaScript -->
+    <script src="/js/unifiedPDFService.js?v=<%= Date.now() %>"></script>
+    <script src="/js/exportUtils.js?v=<%= Date.now() %>"></script>
     <script src="/js/dashboard.js"></script>
+    <script src="/js/licenseCenter.js?v=<%= Date.now() %>"></script>
+    <script src="/js/exportHub.js?v=<%= Date.now() %>"></script>
+    <script src="/js/dataImporter.js?v=<%= Date.now() %>"></script>
+    <script src="/js/dateConsultationModal.js?v=<%= Date.now() %>"></script>
+    <script src="/js/consultationLogTableEnhancer.js?v=<%= Date.now() %>"></script>
+    <script src="/js/consultationLogManager.js?v=<%= Date.now() %>"></script>
+    <script src="/js/sectionManager.js?v=<%= Date.now() %>"></script>
 </body>
 </html>

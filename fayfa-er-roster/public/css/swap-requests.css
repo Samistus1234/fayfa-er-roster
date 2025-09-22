@@ -1,0 +1,167 @@
+/* Swap Requests Styles */
+.swap-requests-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.swap-request-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.swap-request-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.swap-request-card.pending {
+    border-left: 4px solid #ffc107;
+}
+
+.swap-request-card.approved {
+    border-left: 4px solid #20E3B2;
+    opacity: 0.8;
+}
+
+.swap-request-card.rejected {
+    border-left: 4px solid #f5365c;
+    opacity: 0.8;
+}
+
+.swap-request-card.cancelled {
+    border-left: 4px solid #6c757d;
+    opacity: 0.6;
+}
+
+.swap-details {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 0;
+}
+
+.swap-details .fa-exchange-alt {
+    font-size: 1.5rem;
+    margin-top: 20px;
+}
+
+/* Swap button in roster */
+.swap-duty-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.swap-duty-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Badge for pending swaps */
+#swapRequestBadge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #f5365c;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+/* Navigation item for swaps */
+.nav-item-swap {
+    position: relative;
+}
+
+.nav-item-swap .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Style for swap button in action cards */
+.action-card.nav-item-swap {
+    position: relative;
+}
+
+.action-card.nav-item-swap #swapRequestBadge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #f5365c;
+    color: white;
+    border-radius: 10px;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 0 6px;
+    box-shadow: 0 2px 4px rgba(245, 54, 92, 0.3);
+}
+
+/* Form styles in modal */
+#swapRequestModal .form-select,
+#swapRequestModal .form-control {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+#swapRequestModal .form-select:focus,
+#swapRequestModal .form-control:focus {
+    background: white;
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Tab badges */
+#swapRequestModal .nav-link .badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+/* Empty state */
+.swap-requests-list .text-center {
+    padding: 40px 20px;
+}
+
+.swap-requests-list .text-center i {
+    opacity: 0.3;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .swap-details .row {
+        font-size: 0.875rem;
+    }
+    
+    .swap-details .fa-exchange-alt {
+        display: none;
+    }
+    
+    .swap-request-card {
+        padding: 12px;
+    }
+}

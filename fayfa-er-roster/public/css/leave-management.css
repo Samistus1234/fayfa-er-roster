@@ -1,0 +1,1053 @@
+/* Leave Management Styles */
+
+.leave-management-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Leave Balance Card */
+.leave-balance-card {
+    padding: 25px;
+    margin-bottom: 30px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.balance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.balance-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.balance-content {
+    display: grid;
+    gap: 20px;
+}
+
+.balance-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 20px;
+}
+
+.stat {
+    text-align: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.stat:hover {
+    transform: translateY(-2px);
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.stat-value.good {
+    color: #10b981;
+}
+
+.stat-value.warning {
+    color: #f59e0b;
+}
+
+.stat-value.critical {
+    color: #ef4444;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.balance-progress {
+    position: relative;
+}
+
+.progress-bar {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.good {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.progress-fill.warning {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.progress-fill.critical {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.progress-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Leave Tabs */
+.leave-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.leave-tab {
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: 8px 8px 0 0;
+}
+
+.leave-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.leave-tab.active {
+    color: var(--primary-color);
+    background: rgba(103, 126, 234, 0.1);
+}
+
+.leave-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -11px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+/* Leave List */
+.leave-list {
+    display: grid;
+    gap: 20px;
+}
+
+.leave-card {
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.leave-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.leave-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.leave-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.leave-type-badge.annual {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.leave-type-badge.sick {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.leave-type-badge.emergency {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.leave-type-badge.personal {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.leave-card-body {
+    display: grid;
+    gap: 10px;
+}
+
+.doctor-info,
+.leave-dates,
+.leave-reason,
+.admin-notes {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.doctor-info i,
+.leave-dates i,
+.leave-reason i,
+.admin-notes i {
+    color: var(--text-tertiary);
+    width: 20px;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.duration {
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+}
+
+.leave-card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Calendar View */
+.leave-calendar {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.calendar-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-bottom: 30px;
+}
+
+.calendar-day-header {
+    padding: 10px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.calendar-day:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-day.empty {
+    background: transparent;
+    border: none;
+    cursor: default;
+}
+
+.calendar-day.today {
+    background: rgba(103, 126, 234, 0.1);
+    border-color: var(--primary-color);
+}
+
+.calendar-day.has-leaves {
+    background: rgba(245, 158, 11, 0.05);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.day-number {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.leave-indicators {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+}
+
+.leave-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.leave-indicator.annual {
+    background: #10b981;
+}
+
+.leave-indicator.sick {
+    background: #ef4444;
+}
+
+.leave-indicator.emergency {
+    background: #f59e0b;
+}
+
+.leave-indicator.personal {
+    background: #3b82f6;
+}
+
+.more {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+/* Upcoming Leaves */
+.upcoming-leaves {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.upcoming-leaves h4 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.upcoming-list {
+    display: grid;
+    gap: 10px;
+}
+
+.upcoming-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.upcoming-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.doctor-name {
+    font-weight: 500;
+}
+
+.dates {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Statistics View */
+.leave-statistics {
+    display: grid;
+    gap: 30px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.stat-card h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.stat-card .stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stat-card .stat-value.warning {
+    color: #f59e0b;
+}
+
+.stat-card .stat-value.success {
+    color: #10b981;
+}
+
+.leave-type-breakdown {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.leave-type-breakdown h4 {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.type-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.type-stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+}
+
+.type-stat i {
+    font-size: 1.5rem;
+}
+
+.type-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.type-count {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Leave Request Modal */
+.conflict-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    color: #f59e0b;
+    margin-top: 15px;
+}
+
+.conflict-warning i {
+    font-size: 1.2rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--text-tertiary);
+    margin-bottom: 20px;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .leave-management-container {
+        padding: 15px;
+    }
+    
+    .balance-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .balance-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .leave-tabs {
+        overflow-x: auto;
+        padding-bottom: 0;
+        margin-bottom: 20px;
+    }
+    
+    .leave-tab {
+        white-space: nowrap;
+        font-size: 0.875rem;
+        padding: 8px 16px;
+    }
+    
+    .calendar-grid {
+        gap: 2px;
+    }
+    
+    .calendar-day {
+        font-size: 0.875rem;
+        padding: 5px;
+    }
+    
+    .leave-indicators {
+        bottom: 2px;
+        left: 2px;
+        right: 2px;
+    }
+    
+    .upcoming-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .leave-balance-card,
+    .leave-card,
+    .stat-card {
+        background: rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .progress-bar {
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .calendar-day {
+        background: rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .calendar-day:hover {
+        background: rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* Loading State */
+.leave-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
+.leave-loading::after {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(103, 126, 234, 0.2);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+/* Annual Planning View */
+.annual-planning-container {
+    padding: 20px;
+}
+
+.annual-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.annual-header h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.year-navigation {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.year-navigation .btn-icon {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.year-navigation .btn-icon:hover {
+    background: var(--hover-bg);
+    border-radius: 8px;
+}
+
+.current-year {
+    font-size: 18px;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: center;
+}
+
+.annual-summary {
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    display: inline-block;
+    padding: 20px 30px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.summary-value {
+    display: block;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.months-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.month-card {
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.month-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.month-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.month-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.leave-count {
+    font-size: 12px;
+    padding: 4px 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 20px;
+}
+
+.doctors-on-leave {
+    margin-bottom: 15px;
+}
+
+.doctor-leave-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.doctor-leave-item:last-child {
+    border-bottom: none;
+}
+
+.doctor-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.leave-days {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.month-total {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.no-leaves {
+    text-align: center;
+    padding: 20px;
+    color: var(--success);
+}
+
+.no-leaves i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.view-details {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 15px;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.view-details:hover {
+    gap: 10px;
+}
+
+/* Month Details Modal */
+.month-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+    background: var(--bg-light);
+    border-radius: 12px;
+}
+
+.stat-item .stat-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 5px;
+}
+
+.stat-item .stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.doctor-leave-details {
+    margin-top: 30px;
+}
+
+.doctor-leave-details h4 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.doctor-detail-card {
+    padding: 20px;
+    background: var(--bg-light);
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.doctor-info {
+    margin-bottom: 15px;
+}
+
+.doctor-info h5 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.department {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.leave-balance {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    background: var(--info-light);
+    color: var(--info);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.leave-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.leave-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+}
+
+.leave-type {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.leave-type.annual {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.leave-type.sick {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.leave-type.emergency {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.leave-type.personal {
+    background: var(--info-light);
+    color: var(--info);
+}
+
+.leave-dates {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.leave-duration {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+EOF < /dev/null
+/* Leave Management Section Header Fix */
+.leave-management-section .section-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leave-management-section .section-title {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.leave-management-section .section-title i {
+    font-size: 1.6rem;
+    color: var(--primary-color);
+}
+
+.leave-management-section .section-subtitle {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Fix tab alignment */
+.leave-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0;
+    flex-wrap: wrap;
+}
+
+.leave-tab {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: 8px 8px 0 0;
+    white-space: nowrap;
+}
+
+/* Fix object Promise text */
+.leave-content {
+    min-height: 400px;
+}
+
+/* Loading state */
+.leave-content.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.leave-content.loading::before {
+    content: "";
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(103, 126, 234, 0.2);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+EOF < /dev/null
+/* Help Section */
+.leave-help-section {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.btn-help {
+    padding: 8px 16px;
+    background: rgba(103, 126, 234, 0.1);
+    color: var(--primary-color);
+    border: 1px solid rgba(103, 126, 234, 0.3);
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-help:hover {
+    background: rgba(103, 126, 234, 0.2);
+    transform: translateY(-1px);
+}
+
+.help-content h6 {
+    color: var(--primary-color);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.help-content ul, .help-content ol {
+    margin-left: 20px;
+}
+
+.help-content li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+EOF < /dev/null

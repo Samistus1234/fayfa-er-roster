@@ -178,16 +178,21 @@ fayfa-er-roster/
 ## Customization
 
 ### Shift Times
+The application uses the following shift schedule:
+- **Morning Shift**: 7:00 AM to 3:00 PM (8 hours)
+- **Evening Shift**: 3:00 PM to 11:00 PM (8 hours)
+- **Night Shift**: 11:00 PM to 7:00 AM (8 hours)
+
 Modify shift times in `src/utils/notificationScheduler.js`:
 ```javascript
 case 'morning':
-    dutyDate.setHours(6, 0, 0, 0); // 6:00 AM
+    dutyDate.setHours(7, 0, 0, 0); // 7:00 AM
     break;
 case 'evening':
-    dutyDate.setHours(14, 0, 0, 0); // 2:00 PM
+    dutyDate.setHours(15, 0, 0, 0); // 3:00 PM
     break;
 case 'night':
-    dutyDate.setHours(22, 0, 0, 0); // 10:00 PM
+    dutyDate.setHours(23, 0, 0, 0); // 11:00 PM
     break;
 ```
 

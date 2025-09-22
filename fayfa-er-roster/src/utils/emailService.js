@@ -41,9 +41,9 @@ class EmailService {
     });
 
     const shiftTimes = {
-      morning: '6:00 AM - 2:00 PM',
-      evening: '2:00 PM - 10:00 PM',
-      night: '10:00 PM - 6:00 AM'
+      morning: '7:00 AM - 3:00 PM',
+      evening: '3:00 PM - 11:00 PM',
+      night: '11:00 PM - 7:00 AM'
     };
 
     return `

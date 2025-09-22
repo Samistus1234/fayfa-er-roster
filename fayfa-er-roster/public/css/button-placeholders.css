@@ -1,0 +1,172 @@
+/* Button Placeholder Styles */
+.duty-analytics-content,
+.er-statistics-content,
+.referral-entry-content,
+.saudi-crescent-content,
+.license-content,
+.leave-content,
+.reports-content,
+.consultation-content,
+.referral-content,
+.fairness-content {
+    padding: 40px;
+    text-align: center;
+}
+
+.analytics-header,
+.statistics-header,
+.entry-header,
+.crescent-header,
+.license-header,
+.leave-header,
+.reports-header,
+.consultation-header,
+.referral-header,
+.fairness-header {
+    margin-bottom: 30px;
+}
+
+.analytics-header h4,
+.statistics-header h4,
+.entry-header h4,
+.crescent-header h4,
+.license-header h4,
+.leave-header h4,
+.reports-header h4,
+.consultation-header h4,
+.referral-header h4,
+.fairness-header h4 {
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.dark-mode .analytics-header h4,
+.dark-mode .statistics-header h4,
+.dark-mode .entry-header h4,
+.dark-mode .crescent-header h4,
+.dark-mode .license-header h4,
+.dark-mode .leave-header h4,
+.dark-mode .reports-header h4,
+.dark-mode .consultation-header h4,
+.dark-mode .referral-header h4,
+.dark-mode .fairness-header h4 {
+    color: var(--dark-text-primary);
+}
+
+.analytics-header p,
+.statistics-header p,
+.entry-header p,
+.crescent-header p,
+.license-header p,
+.leave-header p,
+.reports-header p,
+.consultation-header p,
+.referral-header p,
+.fairness-header p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.dark-mode .analytics-header p,
+.dark-mode .statistics-header p,
+.dark-mode .entry-header p,
+.dark-mode .crescent-header p,
+.dark-mode .license-header p,
+.dark-mode .leave-header p,
+.dark-mode .reports-header p,
+.dark-mode .consultation-header p,
+.dark-mode .referral-header p,
+.dark-mode .fairness-header p {
+    color: var(--dark-text-secondary);
+}
+
+.analytics-placeholder,
+.statistics-placeholder,
+.entry-placeholder,
+.crescent-placeholder,
+.license-placeholder,
+.leave-placeholder,
+.reports-placeholder,
+.consultation-placeholder,
+.referral-placeholder,
+.fairness-placeholder {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    padding: 60px 40px;
+    margin-top: 30px;
+}
+
+.analytics-placeholder i,
+.statistics-placeholder i,
+.entry-placeholder i,
+.crescent-placeholder i,
+.license-placeholder i,
+.leave-placeholder i,
+.reports-placeholder i,
+.consultation-placeholder i,
+.referral-placeholder i,
+.fairness-placeholder i {
+    color: var(--primary-gradient);
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.analytics-placeholder p,
+.statistics-placeholder p,
+.entry-placeholder p,
+.crescent-placeholder p,
+.license-placeholder p,
+.leave-placeholder p,
+.reports-placeholder p,
+.consultation-placeholder p,
+.referral-placeholder p,
+.fairness-placeholder p {
+    color: var(--text-muted);
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.dark-mode .analytics-placeholder p,
+.dark-mode .statistics-placeholder p,
+.dark-mode .entry-placeholder p,
+.dark-mode .crescent-placeholder p,
+.dark-mode .license-placeholder p,
+.dark-mode .leave-placeholder p,
+.dark-mode .reports-placeholder p,
+.dark-mode .consultation-placeholder p,
+.dark-mode .referral-placeholder p,
+.dark-mode .fairness-placeholder p {
+    color: var(--dark-text-secondary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .duty-analytics-content,
+    .er-statistics-content,
+    .referral-entry-content,
+    .saudi-crescent-content,
+    .license-content,
+    .leave-content,
+    .reports-content,
+    .consultation-content,
+    .referral-content,
+    .fairness-content {
+        padding: 20px;
+    }
+    
+    .analytics-placeholder,
+    .statistics-placeholder,
+    .entry-placeholder,
+    .crescent-placeholder,
+    .license-placeholder,
+    .leave-placeholder,
+    .reports-placeholder,
+    .consultation-placeholder,
+    .referral-placeholder,
+    .fairness-placeholder {
+        padding: 40px 20px;
+    }
+}

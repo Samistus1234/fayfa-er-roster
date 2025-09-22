@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Management Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        .status.info {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="text-center text-white mb-4">
+            <i class="fas fa-file-export"></i>
+            Export Management Test
+        </h1>
+        
+        <div class="text-center mb-4">
+            <button class="test-button" onclick="testExportManagement()">
+                <i class="fas fa-play"></i>
+                Test Export Management
+            </button>
+            <button class="test-button" onclick="testDirectDownloads()">
+                <i class="fas fa-download"></i>
+                Test Direct Downloads
+            </button>
+            <button class="test-button" onclick="clearResults()">
+                <i class="fas fa-trash"></i>
+                Clear Results
+            </button>
+        </div>
+
+        <div id="results" class="mt-4">
+            <!-- Test results will appear here -->
+        </div>
+    </div>
+
+    <!-- Export Modal (copied from dashboard) -->
+    <div id="exportModal" class="modal-overlay" style="display: none;">
+        <div class="export-modal glass-card">
+            <div class="modal-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-file-export"></i>
+                    </div>
+                    <div>
+                        <h2>EXPORT MANAGEMENT</h2>
+                        <p>Export roster data, analytics, and reports</p>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeExportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="exportModalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/js/exportManager.js?v=<%= Date.now() %>"></script>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const statusClass = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${statusClass}`;
+            statusDiv.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            results.appendChild(statusDiv);
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testDirectDownloads() {
+            clearResults();
+            log('Testing direct download links...', 'info');
+
+            const downloads = [
+                { name: 'Roster CSV', url: '/api/export/roster/csv' },
+                { name: 'Doctors CSV', url: '/api/export/doctors/csv' },
+                { name: 'Analytics CSV (June 2025)', url: '/api/export/analytics/csv?year=2025&month=6' },
+                { name: 'Report Data (June 2025)', url: '/api/export/report/data?year=2025&month=6' }
+            ];
+
+            for (const download of downloads) {
+                try {
+                    log(`Testing ${download.name}...`, 'info');
+                    const response = await fetch(download.url);
+                    
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const data = await response.json();
+                            log(`✅ ${download.name}: JSON response received (${JSON.stringify(data).length} chars)`, 'success');
+                        } else {
+                            const text = await response.text();
+                            log(`✅ ${download.name}: CSV response received (${text.length} chars)`, 'success');
+                        }
+                    } else {
+                        log(`❌ ${download.name}: Failed with status ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ ${download.name}: Error - ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function testExportManagement() {
+            clearResults();
+            log('Testing Export Management functionality...', 'info');
+
+            // Check if functions exist
+            if (typeof showExport === 'function') {
+                log('✅ showExport function found', 'success');
+            } else {
+                log('❌ showExport function not found', 'error');
+                return;
+            }
+
+            if (typeof exportManager !== 'undefined') {
+                log('✅ exportManager object found', 'success');
+            } else {
+                log('❌ exportManager object not found', 'error');
+                return;
+            }
+
+            // Check modal elements
+            const modal = document.getElementById('exportModal');
+            const modalBody = document.getElementById('exportModalBody');
+
+            if (modal) {
+                log('✅ Export modal element found', 'success');
+            } else {
+                log('❌ Export modal element not found', 'error');
+                return;
+            }
+
+            if (modalBody) {
+                log('✅ Modal body element found', 'success');
+            } else {
+                log('❌ Modal body element not found', 'error');
+                return;
+            }
+
+            // Try to call showExport
+            log('Calling showExport()...', 'info');
+            try {
+                showExport();
+                log('✅ showExport() called successfully', 'success');
+                
+                // Check if modal is visible
+                setTimeout(() => {
+                    const modalStyle = window.getComputedStyle(modal);
+                    if (modalStyle.display !== 'none') {
+                        log('✅ Modal is now visible', 'success');
+                        
+                        // Check if content is loaded
+                        setTimeout(() => {
+                            if (modalBody.innerHTML.trim().length > 0) {
+                                log('✅ Modal content loaded successfully', 'success');
+                                log(`Modal content length: ${modalBody.innerHTML.length} characters`, 'info');
+                                
+                                // Check for export format cards
+                                const formatCards = modalBody.querySelectorAll('.format-card');
+                                if (formatCards.length > 0) {
+                                    log(`✅ Found ${formatCards.length} export format cards`, 'success');
+                                } else {
+                                    log('❌ No export format cards found', 'error');
+                                }
+                            } else {
+                                log('❌ Modal content is empty', 'error');
+                            }
+                        }, 2000);
+                    } else {
+                        log('❌ Modal is not visible', 'error');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                log(`❌ Error calling showExport(): ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('=== Export Management Test Page Loaded ===', 'info');
+                log('Click "Test Export Management" to test the functionality', 'info');
+            }, 500);
+        });
+
+        // Toast function fallback
+        function showToast(message, type) {
+            log(`Toast: ${message}`, type);
+        }
+    </script>
+</body>
+</html>

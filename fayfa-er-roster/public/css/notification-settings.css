@@ -1,0 +1,243 @@
+/* Notification Settings Styles */
+.notification-settings-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.notification-channel-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.notification-channel-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.channel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.channel-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.channel-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.channel-info h6 {
+    margin: 0;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.channel-info p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.channel-settings {
+    margin-left: 64px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.setting-item label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #495057;
+}
+
+.setting-item .form-control,
+.setting-item .form-select {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 10px 16px;
+}
+
+.setting-item .form-control:focus,
+.setting-item .form-select:focus {
+    background: white;
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Toggle Switch Styling */
+.form-check-input {
+    width: 50px;
+    height: 26px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border: none;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #20E3B2;
+    border-color: #20E3B2;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(32, 227, 178, 0.25);
+}
+
+/* Notification History */
+.notification-history {
+    max-height: 300px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.history-item {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    border-color: rgba(102, 126, 234, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.history-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Emergency Alert Section */
+.emergency-alert-section {
+    background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+    color: white;
+}
+
+.emergency-alert-section h5 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.emergency-alert-section .form-control {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    color: #333;
+}
+
+.emergency-alert-section .btn {
+    background: white;
+    color: #f5365c;
+    border: none;
+    font-weight: 600;
+}
+
+.emergency-alert-section .btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* SMS Status Dashboard */
+.sms-status-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.sms-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+}
+
+.stat-item .stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* Dark mode adjustments */
+body.dark-mode .notification-channel-card {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .channel-info h6 {
+    color: white;
+}
+
+body.dark-mode .setting-item label {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+body.dark-mode .history-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* SMS Management Grid */
+.sms-management-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .channel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .channel-settings {
+        margin-left: 0;
+        margin-top: 16px;
+    }
+    
+    .sms-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .sms-management-grid {
+        grid-template-columns: 1fr;
+    }
+}

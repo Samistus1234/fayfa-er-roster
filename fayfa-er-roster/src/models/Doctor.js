@@ -16,7 +16,8 @@ class Doctor {
     new Doctor(4, 'Dr. Hasan', 'hasan@fayfa.hospital', '+966501234570', 'Emergency Medicine'),
     new Doctor(5, 'Dr. Akin', 'akin@fayfa.hospital', '+966501234571', 'Emergency Medicine'),
     new Doctor(6, 'Dr. Ebuka', 'ebuka@fayfa.hospital', '+966501234572', 'Emergency Medicine'),
-    new Doctor(7, 'Dr. Rabab', 'rabab@fayfa.hospital', '+966501234573', 'Emergency Medicine')
+    new Doctor(7, 'Dr. Rabab', 'rabab@fayfa.hospital', '+966501234573', 'Emergency Medicine'),
+    new Doctor(8, 'Dr. Hiba', 'hiba@fayfa.hospital', '+966501234574', 'Emergency Medicine')
   ];
 
   static getAll() {

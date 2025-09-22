@@ -45,22 +45,22 @@ class NotificationScheduler {
 
   getDutyDateTime(rosterEntry) {
     const dutyDate = new Date(rosterEntry.date);
-    
-    // Set time based on shift
+
+    // Set time based on shift - Updated to hospital's actual schedule
     switch (rosterEntry.shift) {
       case 'morning':
-        dutyDate.setHours(6, 0, 0, 0); // 6:00 AM
+        dutyDate.setHours(7, 0, 0, 0); // 7:00 AM
         break;
       case 'evening':
-        dutyDate.setHours(14, 0, 0, 0); // 2:00 PM
+        dutyDate.setHours(15, 0, 0, 0); // 3:00 PM
         break;
       case 'night':
-        dutyDate.setHours(22, 0, 0, 0); // 10:00 PM
+        dutyDate.setHours(23, 0, 0, 0); // 11:00 PM
         break;
       default:
-        dutyDate.setHours(6, 0, 0, 0); // Default to morning
+        dutyDate.setHours(7, 0, 0, 0); // Default to morning
     }
-    
+
     return dutyDate;
   }
 

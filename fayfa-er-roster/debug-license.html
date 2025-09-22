@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Management Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>License Management Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>API Tests</h2>
+        <button onclick="testDoctorsAPI()">Test Doctors API</button>
+        <button onclick="testLicensesAPI()">Test Licenses API</button>
+        <button onclick="testModalElements()">Test Modal Elements</button>
+        <button onclick="testLicenseFunction()">Test showLicenses() Function</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>Results</h2>
+        <div id="results">Click a test button to see results...</div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            results.innerHTML += `[${timestamp}] <span class="${className}">${message}</span>\n`;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testDoctorsAPI() {
+            clearResults();
+            log('Testing Doctors API...', 'info');
+            
+            try {
+                const response = await fetch('/api/doctors');
+                log(`Doctors API Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Doctors API Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                    
+                    if (data.success && Array.isArray(data.data)) {
+                        log(`✅ Found ${data.data.length} doctors`, 'success');
+                    } else if (Array.isArray(data)) {
+                        log(`✅ Found ${data.length} doctors (direct array format)`, 'success');
+                    } else {
+                        log('❌ Unexpected doctors API response format', 'error');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Doctors API Error: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Doctors API Exception: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLicensesAPI() {
+            clearResults();
+            log('Testing Licenses API...', 'info');
+            
+            try {
+                const response = await fetch('/api/medical-licenses');
+                log(`Licenses API Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Licenses API Response (first 500 chars): ${JSON.stringify(data).substring(0, 500)}...`, 'success');
+                    
+                    if (Array.isArray(data)) {
+                        log(`✅ Found ${data.length} licenses`, 'success');
+                        if (data.length > 0) {
+                            log(`Sample license: ${JSON.stringify(data[0], null, 2)}`, 'info');
+                        }
+                    } else {
+                        log('❌ Unexpected licenses API response format', 'error');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Licenses API Error: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Licenses API Exception: ${error.message}`, 'error');
+            }
+        }
+
+        function testModalElements() {
+            clearResults();
+            log('Testing Modal Elements...', 'info');
+            
+            // Check for modal
+            const modal = document.getElementById('licenseModal');
+            log(`License Modal Element: ${modal ? '✅ Found' : '❌ Not Found'}`, modal ? 'success' : 'error');
+            
+            if (modal) {
+                log(`Modal display style: ${modal.style.display}`, 'info');
+                log(`Modal computed display: ${window.getComputedStyle(modal).display}`, 'info');
+            }
+            
+            // Check for modal body
+            const modalBody = document.getElementById('licenseModalBody');
+            log(`Modal Body Element: ${modalBody ? '✅ Found' : '❌ Not Found'}`, modalBody ? 'success' : 'error');
+            
+            if (modalBody) {
+                log(`Modal body innerHTML length: ${modalBody.innerHTML.length}`, 'info');
+            }
+            
+            // Check for showLicenses function
+            log(`showLicenses function: ${typeof window.showLicenses !== 'undefined' ? '✅ Available' : '❌ Not Available'}`, typeof window.showLicenses !== 'undefined' ? 'success' : 'error');
+            
+            // Check for licenseManager
+            log(`licenseManager object: ${typeof window.licenseManager !== 'undefined' ? '✅ Available' : '❌ Not Available'}`, typeof window.licenseManager !== 'undefined' ? 'success' : 'error');
+        }
+
+        function testLicenseFunction() {
+            clearResults();
+            log('Testing showLicenses() Function...', 'info');
+            
+            if (typeof window.showLicenses === 'function') {
+                log('✅ showLicenses function found, calling it...', 'success');
+                try {
+                    window.showLicenses();
+                    log('✅ showLicenses() called successfully', 'success');
+                } catch (error) {
+                    log(`❌ Error calling showLicenses(): ${error.message}`, 'error');
+                }
+            } else {
+                log('❌ showLicenses function not found', 'error');
+                
+                // Try to load the script manually
+                log('Attempting to load medicalLicense.js script...', 'info');
+                const script = document.createElement('script');
+                script.src = '/js/medicalLicense.js?v=' + Date.now();
+                script.onload = () => {
+                    log('✅ medicalLicense.js loaded successfully', 'success');
+                    if (typeof window.showLicenses === 'function') {
+                        log('✅ showLicenses function now available', 'success');
+                    } else {
+                        log('❌ showLicenses function still not available after loading script', 'error');
+                    }
+                };
+                script.onerror = () => {
+                    log('❌ Failed to load medicalLicense.js script', 'error');
+                };
+                document.head.appendChild(script);
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('=== Auto-running basic tests ===', 'info');
+                testModalElements();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Roster View</title>
+    <style>
+        body {
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .debug-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .test-button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .test-button:hover {
+            background: #357abd;
+        }
+        #output {
+            background: black;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin-top: 20px;
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+        #roster-content {
+            border: 2px solid #4a90e2;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 100px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Roster View Toggle</h1>
+    
+    <div class="debug-info">
+        <h2>Test Controls</h2>
+        <button class="test-button" onclick="testSetRosterView()">Test setRosterView</button>
+        <button class="test-button" onclick="checkGlobals()">Check Global Variables</button>
+        <button class="test-button" onclick="checkDOM()">Check DOM Elements</button>
+        <button class="test-button" onclick="simulateClick()">Simulate Toggle Click</button>
+        <button class="test-button" onclick="clearOutput()">Clear Output</button>
+    </div>
+    
+    <div class="debug-info">
+        <h2>Test Roster Content</h2>
+        <div id="roster-content">
+            <p>This is test content. It should NOT disappear when clicking buttons.</p>
+        </div>
+    </div>
+    
+    <div class="debug-info">
+        <h2>Debug Output</h2>
+        <div id="output"></div>
+    </div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearOutput() {
+            output.textContent = '';
+            log('Output cleared');
+        }
+        
+        function testSetRosterView() {
+            log('Testing setRosterView function...');
+            
+            if (typeof window.setRosterView === 'function') {
+                log('✓ setRosterView is defined globally');
+                
+                // Test calling it
+                try {
+                    const result = window.setRosterView('table');
+                    log(`✓ setRosterView('table') returned: ${result}`);
+                } catch (error) {
+                    log(`✗ Error calling setRosterView: ${error.message}`);
+                }
+            } else {
+                log('✗ setRosterView is NOT defined globally');
+            }
+        }
+        
+        function checkGlobals() {
+            log('Checking global variables...');
+            
+            // Check for key globals
+            const globals = ['currentRoster', 'currentView', 'doctors', 'currentAnalytics'];
+            
+            globals.forEach(globalName => {
+                if (window[globalName] !== undefined) {
+                    log(`✓ ${globalName} is defined: ${typeof window[globalName]}`);
+                    if (Array.isArray(window[globalName])) {
+                        log(`  Length: ${window[globalName].length}`);
+                    }
+                } else {
+                    log(`✗ ${globalName} is NOT defined`);
+                }
+            });
+        }
+        
+        function checkDOM() {
+            log('Checking DOM elements...');
+            
+            const elements = [
+                '#rosterContent',
+                '.toggle-btn',
+                '.view-toggle',
+                '.roster-content'
+            ];
+            
+            elements.forEach(selector => {
+                const el = document.querySelector(selector);
+                if (el) {
+                    log(`✓ Found ${selector}`);
+                    if (selector === '#rosterContent') {
+                        log(`  Current innerHTML length: ${el.innerHTML.length}`);
+                        log(`  Display style: ${window.getComputedStyle(el).display}`);
+                    }
+                } else {
+                    log(`✗ NOT found: ${selector}`);
+                }
+            });
+        }
+        
+        function simulateClick() {
+            log('Simulating toggle button click...');
+            
+            const btn = document.querySelector('.toggle-btn');
+            if (btn) {
+                log('✓ Found toggle button, clicking...');
+                btn.click();
+                
+                // Check roster content after click
+                setTimeout(() => {
+                    const content = document.getElementById('rosterContent');
+                    if (content) {
+                        log(`After click - innerHTML length: ${content.innerHTML.length}`);
+                        log(`After click - Display: ${window.getComputedStyle(content).display}`);
+                    }
+                }, 100);
+            } else {
+                log('✗ No toggle button found');
+            }
+        }
+        
+        // Log initial state
+        log('Debug page loaded');
+        log('Checking for jQuery: ' + (typeof $ !== 'undefined' ? 'Available' : 'Not available'));
+        log('Checking for GSAP: ' + (typeof gsap !== 'undefined' ? 'Available' : 'Not available'));
+        
+        // Listen for errors
+        window.addEventListener('error', function(e) {
+            log(`✗ JS Error: ${e.message} at ${e.filename}:${e.lineno}`);
+        });
+    </script>
+</body>
+</html>
